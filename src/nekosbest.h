@@ -47,3 +47,4 @@ typedef struct ResponseList {
 
 void endpoints(endpoint_list *list);
 void category(response_list *list, api_endpoint *endpoint, int amount);
+void search(response_list *list, char* query, int amount, response_format type, api_endpoint *category);
