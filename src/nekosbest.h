@@ -21,4 +21,29 @@ typedef struct EndpointList {
     size_t len;
 } endpoint_list;
 
+
+typedef struct GIFSource {
+    char *anime_name;
+} gif_source;
+
+typedef struct PNGSource {
+    char *artist_name;
+    char *artist_href;
+    char *source_url;
+} png_source;
+
+typedef struct ApiResponse {
+    union {
+        gif_source *gif;
+        png_source *png;
+    } source;
+    char* url;
+} api_response;
+
+typedef struct ResponseList {
+    api_response **responses;
+    size_t len;
+} response_list;
+
 void endpoints(endpoint_list *list);
+void category(response_list *list, api_endpoint *endpoint, int amount);
