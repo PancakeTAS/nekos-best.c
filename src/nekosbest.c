@@ -1,5 +1,7 @@
 #include "nekosbest.h"
 
+static char API_URL[26 + 8 + 9 + 1] = "https://nekos.best/api/v2/";
+
 typedef struct HTTPResponse {
     char *text; // not null-terminated
     size_t len;
@@ -51,4 +53,43 @@ static void do_request(http_response *http_response, char* url) {
 
     // cleanup curl
     curl_easy_cleanup(curl);
+}
+
+void endpoints(endpoint_list* list) {
+    // create endpoint url
+    memcpy(API_URL + 26, "endpoints\0", 10);
+
+    // make request
+    http_response http_response;
+    do_request(&http_response, API_URL);
+
+    // parse response
+    cJSON *json = cJSON_ParseWithLength(http_response.text, http_response.len);
+    if (!json || !cJSON_IsObject(json)) {
+        fprintf(stderr, "Failed to parse JSON\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // parse json
+    list->len = cJSON_GetArraySize(json);
+    list->endpoints = malloc(list->len * sizeof(api_endpoint*));
+
+    // iterate through endpoints
+    const cJSON *endpoint_obj;
+    size_t i = 0;
+    cJSON_ArrayForEach(endpoint_obj, json) {
+        api_endpoint* endpoint = malloc(sizeof(api_endpoint));
+        list->endpoints[i++] = endpoint;
+
+        char* name = endpoint_obj->string;
+        endpoint->name = malloc(strlen(name) + 1);
+        strcpy(endpoint->name, name);
+
+        const cJSON *format_obj = cJSON_GetObjectItemCaseSensitive(endpoint_obj, "format");
+        endpoint->format = strcmp(format_obj->valuestring, "png") == 0 ? PNG : GIF;
+    }
+    
+    // cleanup
+    cJSON_Delete(json);
+    free(http_response.text);
 }
