@@ -1,6 +1,9 @@
 #include "nekosbest.h"
 
 #define API_URL "https://nekos.best/api/v2/"
+#define MAX_AMOUNT 20
+#define MIN_QUERY_LEN 3
+#define MAX_QUERY_LEN 150
 
 typedef struct HTTPResponse {
     char *text; // not null-terminated
@@ -99,7 +102,7 @@ error_message endpoints(endpoint_list* list) {
 
 error_message category(response_list *list, api_endpoint *endpoint, int amount) {
     // check if amount is valid
-    if (amount < 1 || amount > 20)
+    if (amount < 1 || amount > MAX_AMOUNT)
         return NEKOSBEST_INVALID_PARAM_ERR;
 
     // create endpoint url
@@ -149,12 +152,12 @@ error_message category(response_list *list, api_endpoint *endpoint, int amount) 
 
 error_message search(response_list *list, char* query, int amount, response_format type, api_endpoint *category) {
     // check if amount is valid
-    if (amount < 1 || amount > 20)
+    if (amount < 1 || amount > MAX_AMOUNT)
         return NEKOSBEST_INVALID_PARAM_ERR;
 
     // check if query is valid
     size_t query_len = strlen(query);
-    if (query_len < 3 || query_len > 150)
+    if (query_len < MIN_QUERY_LEN || query_len > MAX_QUERY_LEN)
         return NEKOSBEST_INVALID_PARAM_ERR;
 
     // create endpoint url
