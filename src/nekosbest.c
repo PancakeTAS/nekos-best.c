@@ -166,13 +166,15 @@ error_message search(response_list *list, char* query, int amount, response_form
 
     // make request
     http_response http_response;
-    do_request(&http_response, url);
+    error_message err = do_request(&http_response, url);
+    if (err != NEKOSBEST_OK)
+        return err;
 
     // parse response
     cJSON *json = cJSON_ParseWithLength(http_response.text, http_response.len);
     if (!json || !cJSON_IsObject(json))
         return NEKOSBEST_CJSON_ERR;
-    
+
     // parse json
     cJSON *results = cJSON_GetObjectItemCaseSensitive(json, "results");
     list->len = cJSON_GetArraySize(results);
