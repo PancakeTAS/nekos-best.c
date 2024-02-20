@@ -34,7 +34,7 @@ int main() {
     }
     printf("\n");
 
-    // search for 'menhera' images
+    // search for 'senko' images
     response_list list4;
     search(&list4, "Senko", 2, GIF, list.endpoints[31]);
 
