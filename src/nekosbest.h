@@ -6,6 +6,14 @@
 #include <curl/curl.h>
 #include <cjson/cJSON.h>
 
+typedef enum ErrorMessage {
+    NEKOSBEST_OK,
+    NEKOSBEST_MEM_ERR,
+    NEKOSBEST_LIBCURL_ERR,
+    NEKOSBEST_CJSON_ERR,
+    NEKOSBEST_INVALID_PARAM_ERR
+} error_message;
+
 typedef enum ReponseFormat {
     PNG,
     GIF
@@ -20,7 +28,6 @@ typedef struct EndpointList {
     api_endpoint **endpoints;
     size_t len;
 } endpoint_list;
-
 
 typedef struct GIFSource {
     char *anime_name;
@@ -45,6 +52,6 @@ typedef struct ResponseList {
     size_t len;
 } response_list;
 
-void endpoints(endpoint_list *list);
-void category(response_list *list, api_endpoint *endpoint, int amount);
-void search(response_list *list, char* query, int amount, response_format type, api_endpoint *category);
+error_message endpoints(endpoint_list *list);
+error_message category(response_list *list, api_endpoint *endpoint, int amount);
+error_message search(response_list *list, char* query, int amount, response_format type, api_endpoint *category);

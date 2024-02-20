@@ -22,21 +22,17 @@ static size_t http_response_write(void *ptr, size_t size, size_t nmemb, http_res
     return size * nmemb;
 }
 
-static void do_request(http_response *http_response, char* url) {
-    // create http response object
-    http_response->text = calloc(1, 1);
+static error_message do_request(http_response *http_response, char* url) {
+    // initialize http response object
     http_response->len = 0;
-    if (http_response->text == NULL) {
-        fprintf(stderr, "Failed to allocate memory for http response message\n");
-        exit(EXIT_FAILURE);
-    }
+    http_response->text = malloc(1);
+    if (!http_response->text)
+        return NEKOSBEST_MEM_ERR;
 
     // initialize curl
     CURL *curl = curl_easy_init();
-    if (curl == NULL) {
-        fprintf(stderr, "Failed to initialize curl\n");
-        exit(EXIT_FAILURE);
-    }
+    if (!curl)
+        return NEKOSBEST_LIBCURL_ERR;
 
     // configure curl request
     curl_easy_setopt(curl, CURLOPT_URL, url);
@@ -46,26 +42,25 @@ static void do_request(http_response *http_response, char* url) {
 
     // make request
     CURLcode res = curl_easy_perform(curl);
-    if (res != CURLE_OK) {
-        fprintf(stderr, "Failed to perform curl request: %s\n", curl_easy_strerror(res));
-        exit(EXIT_FAILURE);
-    }
+    if (res != CURLE_OK)
+        return NEKOSBEST_LIBCURL_ERR;
 
     // cleanup curl
     curl_easy_cleanup(curl);
+    return NEKOSBEST_OK;
 }
 
-void endpoints(endpoint_list* list) {
+error_message endpoints(endpoint_list* list) {
     // make request
     http_response http_response;
-    do_request(&http_response, API_URL "endpoints");
+    error_message err = do_request(&http_response, API_URL "endpoints");
+    if (err != NEKOSBEST_OK)
+        return err;
 
     // parse response
     cJSON *json = cJSON_ParseWithLength(http_response.text, http_response.len);
-    if (!json || !cJSON_IsObject(json)) {
-        fprintf(stderr, "Failed to parse JSON\n");
-        exit(EXIT_FAILURE);
-    }
+    if (!json || !cJSON_IsObject(json))
+        return NEKOSBEST_CJSON_ERR;
 
     // parse json
     list->len = cJSON_GetArraySize(json);
@@ -89,14 +84,13 @@ void endpoints(endpoint_list* list) {
     // cleanup
     cJSON_Delete(json);
     free(http_response.text);
+    return NEKOSBEST_OK;
 }
 
-void category(response_list *list, api_endpoint *endpoint, int amount) {
+error_message category(response_list *list, api_endpoint *endpoint, int amount) {
     // check if amount is valid
-    if (amount < 1 || amount > 20) {
-        fprintf(stderr, "Invalid amount: %d\n", amount);
-        exit(EXIT_FAILURE);
-    }
+    if (amount < 1 || amount > 20)
+        return NEKOSBEST_INVALID_PARAM_ERR;
 
     // create endpoint url
     char url[48];
@@ -104,14 +98,14 @@ void category(response_list *list, api_endpoint *endpoint, int amount) {
 
     // make request
     http_response http_response;
-    do_request(&http_response, url);
+    error_message err = do_request(&http_response, url);
+    if (err != NEKOSBEST_OK)
+        return err;
 
     // parse response
     cJSON *json = cJSON_ParseWithLength(http_response.text, http_response.len);
-    if (!json || !cJSON_IsObject(json)) {
-        fprintf(stderr, "Failed to parse JSON\n");
-        exit(EXIT_FAILURE);
-    }
+    if (!json || !cJSON_IsObject(json))
+        return NEKOSBEST_CJSON_ERR;
 
     // parse json
     cJSON *results = cJSON_GetObjectItemCaseSensitive(json, "results");
@@ -155,21 +149,18 @@ void category(response_list *list, api_endpoint *endpoint, int amount) {
     // cleanup
     cJSON_Delete(json);
     free(http_response.text);
+    return NEKOSBEST_OK;
 }
 
-void search(response_list *list, char* query, int amount, response_format type, api_endpoint *category) {
+error_message search(response_list *list, char* query, int amount, response_format type, api_endpoint *category) {
     // check if amount is valid
-    if (amount < 1 || amount > 20) {
-        fprintf(stderr, "Invalid amount: %d\n", amount);
-        exit(EXIT_FAILURE);
-    }
+    if (amount < 1 || amount > 20)
+        return NEKOSBEST_INVALID_PARAM_ERR;
 
     // check if query is valid
     size_t query_len = strlen(query);
-    if (query_len < 3 || query_len > 150) {
-        fprintf(stderr, "Invalid query: %s\n", query);
-        exit(EXIT_FAILURE);
-    }
+    if (query_len < 3 || query_len > 150)
+        return NEKOSBEST_INVALID_PARAM_ERR;
 
     // create endpoint url
     char url[256];
@@ -184,11 +175,9 @@ void search(response_list *list, char* query, int amount, response_format type, 
 
     // parse response
     cJSON *json = cJSON_ParseWithLength(http_response.text, http_response.len);
-    if (!json || !cJSON_IsObject(json)) {
-        fprintf(stderr, "Failed to parse JSON\n");
-        exit(EXIT_FAILURE);
-    }
-
+    if (!json || !cJSON_IsObject(json))
+        return NEKOSBEST_CJSON_ERR;
+    
     // parse json
     cJSON *results = cJSON_GetObjectItemCaseSensitive(json, "results");
     list->len = cJSON_GetArraySize(results);
@@ -231,4 +220,5 @@ void search(response_list *list, char* query, int amount, response_format type, 
     // cleanup
     cJSON_Delete(json);
     free(http_response.text);
+    return NEKOSBEST_OK;
 }
