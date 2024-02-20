@@ -8,18 +8,21 @@ typedef struct HTTPResponse {
 } http_response;
 
 static size_t http_response_write(void *ptr, size_t size, size_t nmemb, http_response *http_response) {
+    size_t size = count * nmemb;
+    size_t new_len = http_response->len + size;
+
     // resize response text
-    size_t new_len = http_response->len + size * nmemb;
-    http_response->text = realloc(http_response->text, new_len + 1);
-    if (http_response->text == NULL) {
-        fprintf(stderr, "Failed to reallocate memory for http response message\n");
-        exit(EXIT_FAILURE);
+    char* new_text = realloc(http_response->text, new_len + 1);
+    if (!new_text) {
+        free(http_response->text);
+        return CURLE_ABORTED_BY_CALLBACK;
     }
 
     // copy new data to response text
-    memcpy(http_response->text + http_response->len, ptr, size * nmemb);
+    memcpy(new_text + http_response->len, ptr, size);
+    http_response->text = new_text;
     http_response->len = new_len;
-    return size * nmemb;
+    return size;
 }
 
 static error_message do_request(http_response *http_response, char* url) {
