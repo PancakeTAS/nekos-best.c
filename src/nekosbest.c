@@ -7,7 +7,7 @@ typedef struct HTTPResponse {
     size_t len;
 } http_response;
 
-static size_t http_response_write(void *ptr, size_t size, size_t nmemb, http_response *http_response) {
+static size_t http_response_write(void *ptr, size_t count, size_t nmemb, http_response *http_response) {
     size_t size = count * nmemb;
     size_t new_len = http_response->len + size;
 
