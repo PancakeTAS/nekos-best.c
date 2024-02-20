@@ -1,6 +1,6 @@
 #include "nekosbest.h"
 
-static char API_URL[26 + 8 + 9 + 1] = "https://nekos.best/api/v2/";
+#define API_URL "https://nekos.best/api/v2/"
 
 typedef struct HTTPResponse {
     char *text; // not null-terminated
@@ -56,12 +56,9 @@ static void do_request(http_response *http_response, char* url) {
 }
 
 void endpoints(endpoint_list* list) {
-    // create endpoint url
-    memcpy(API_URL + 26, "endpoints\0", 10);
-
     // make request
     http_response http_response;
-    do_request(&http_response, API_URL);
+    do_request(&http_response, API_URL "endpoints");
 
     // parse response
     cJSON *json = cJSON_ParseWithLength(http_response.text, http_response.len);
@@ -96,21 +93,18 @@ void endpoints(endpoint_list* list) {
 
 void category(response_list *list, api_endpoint *endpoint, int amount) {
     // check if amount is valid
-    if (amount < 1 || amount > 9) { // TODO: fix range
+    if (amount < 1 || amount > 20) {
         fprintf(stderr, "Invalid amount: %d\n", amount);
         exit(EXIT_FAILURE);
     }
 
     // create endpoint url
-    size_t endpoint_len = strlen(endpoint->name);
-    memcpy(API_URL + 26, endpoint->name, endpoint_len);
-    memcpy(API_URL + 26 + endpoint_len, "?amount=", 8);
-    API_URL[26 + endpoint_len + 8] = (amount + '0');
-    API_URL[26 + endpoint_len + 8 + 1] = '\0';
+    char url[48];
+    sprintf(url, "%s%s?amount=%d", API_URL, endpoint->name, amount);
 
     // make request
     http_response http_response;
-    do_request(&http_response, API_URL);
+    do_request(&http_response, url);
 
     // parse response
     cJSON *json = cJSON_ParseWithLength(http_response.text, http_response.len);
@@ -165,33 +159,24 @@ void category(response_list *list, api_endpoint *endpoint, int amount) {
 
 void search(response_list *list, char* query, int amount, response_format type, api_endpoint *category) {
     // check if amount is valid
-    if (amount < 1 || amount > 9) {
+    if (amount < 1 || amount > 20) {
         fprintf(stderr, "Invalid amount: %d\n", amount);
         exit(EXIT_FAILURE);
     }
 
-    // create endpoint url
-    char* url;
-    if (category)
-        url = malloc(26 + 5 + 1 + 6 + strlen(query) + 1 + 6 + 1 + 8 + 1 + 9 + strlen(category->name) + 1);
-    else
-        url = malloc(26 + 5 + 1 + 6 + strlen(query) + 1 + 6 + 1 + 8 + 1);
-    
-    memcpy(url, API_URL, 26);
-    memcpy(url + 26, "search?query=", 13);
-    memcpy(url + 26 + 13, query, strlen(query));
-    memcpy(url + 26 + 13 + strlen(query), "&type=", 6);
-    url[26 + 13 + strlen(query) + 6] = (type + '1');
-    memcpy(url + 26 + 13 + strlen(query) + 6 + 1, "&amount=", 8);
-    url[26 + 13 + strlen(query) + 6 + 1 + 8] = (amount + '0');
-
-    if (category) {
-        memcpy(url + 26 + 13 + strlen(query) + 6 + 1 + 8, "&category=", 10);
-        memcpy(url + 26 + 13 + strlen(query) + 6 + 1 + 8 + 10, category->name, strlen(category->name));
-        url[26 + 13 + strlen(query) + 6 + 1 + 8 + 10 + strlen(category->name)] = '\0';
-    } else {
-        url[26 + 13 + strlen(query) + 6 + 1 + 8 + 1] = '\0';
+    // check if query is valid
+    size_t query_len = strlen(query);
+    if (query_len < 3 || query_len > 150) {
+        fprintf(stderr, "Invalid query: %s\n", query);
+        exit(EXIT_FAILURE);
     }
+
+    // create endpoint url
+    char url[256];
+    if (category)
+        sprintf(url, "%ssearch?query=%s&type=%d&amount=%d&category=%s", API_URL, query, type + 1, amount, category->name);
+    else
+        sprintf(url, "%ssearch?query=%s&type=%d&amount=%d", API_URL, query, type + 1, amount);
 
     // make request
     http_response http_response;
@@ -246,5 +231,4 @@ void search(response_list *list, char* query, int amount, response_format type, 
     // cleanup
     cJSON_Delete(json);
     free(http_response.text);
-    free(url);
 }
