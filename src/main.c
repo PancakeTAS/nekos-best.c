@@ -14,7 +14,7 @@ int main() {
 
     // get 'neko' images
     response_list list2;
-    category(&list2, list.endpoints[0], 4);
+    category(&list2, list.endpoints[0], 15);
 
     // print results
     printf("Results:\n");

@@ -53,6 +53,13 @@ static error_message do_request(http_response *http_response, char* url) {
     return NEKOSBEST_OK;
 }
 
+static char* jsondup(const cJSON *json, char* key) {
+    const cJSON *element = cJSON_GetObjectItemCaseSensitive(json, key);
+    char* str = malloc(strlen(element->valuestring) + 1);
+    strcpy(str, element->valuestring);
+    return str;
+}
+
 error_message endpoints(endpoint_list* list) {
     // make request
     http_response http_response;
@@ -122,30 +129,15 @@ error_message category(response_list *list, api_endpoint *endpoint, int amount) 
         api_response* response = malloc(sizeof(api_response));
         list->responses[i++] = response;
 
-        const cJSON *url_obj = cJSON_GetObjectItemCaseSensitive(response_obj, "url");
-        response->url = malloc(strlen(url_obj->valuestring) + 1);
-        strcpy(response->url, url_obj->valuestring);
-
+        response->url = jsondup(response_obj, "url");
         if (endpoint->format == GIF) {
             response->source.gif = malloc(sizeof(gif_source));
-
-            const cJSON *anime_name_obj = cJSON_GetObjectItemCaseSensitive(response_obj, "anime_name");
-            response->source.gif->anime_name = malloc(strlen(anime_name_obj->valuestring) + 1);
-            strcpy(response->source.gif->anime_name, anime_name_obj->valuestring);
+            response->source.gif->anime_name = jsondup(response_obj, "anime_name");
         } else {
             response->source.png = malloc(sizeof(png_source));
-
-            const cJSON *artist_name_obj = cJSON_GetObjectItemCaseSensitive(response_obj, "artist_name");
-            response->source.png->artist_name = malloc(strlen(artist_name_obj->valuestring) + 1);
-            strcpy(response->source.png->artist_name, artist_name_obj->valuestring);
-
-            const cJSON *artist_href_obj = cJSON_GetObjectItemCaseSensitive(response_obj, "artist_href");
-            response->source.png->artist_href = malloc(strlen(artist_href_obj->valuestring) + 1);
-            strcpy(response->source.png->artist_href, artist_href_obj->valuestring);
-
-            const cJSON *source_url_obj = cJSON_GetObjectItemCaseSensitive(response_obj, "source_url");
-            response->source.png->source_url = malloc(strlen(source_url_obj->valuestring) + 1);
-            strcpy(response->source.png->source_url, source_url_obj->valuestring);
+            response->source.png->artist_name = jsondup(response_obj, "artist_name");
+            response->source.png->artist_href = jsondup(response_obj, "artist_href");
+            response->source.png->source_url = jsondup(response_obj, "source_url");
         }
     }
 
@@ -193,30 +185,15 @@ error_message search(response_list *list, char* query, int amount, response_form
         api_response* response = malloc(sizeof(api_response));
         list->responses[i++] = response;
 
-        const cJSON *url_obj = cJSON_GetObjectItemCaseSensitive(response_obj, "url");
-        response->url = malloc(strlen(url_obj->valuestring) + 1);
-        strcpy(response->url, url_obj->valuestring);
-
+        response->url = jsondup(response_obj, "url");
         if (type == GIF) {
             response->source.gif = malloc(sizeof(gif_source));
-
-            const cJSON *anime_name_obj = cJSON_GetObjectItemCaseSensitive(response_obj, "anime_name");
-            response->source.gif->anime_name = malloc(strlen(anime_name_obj->valuestring) + 1);
-            strcpy(response->source.gif->anime_name, anime_name_obj->valuestring);
+            response->source.gif->anime_name = jsondup(response_obj, "anime_name");
         } else {
             response->source.png = malloc(sizeof(png_source));
-
-            const cJSON *artist_name_obj = cJSON_GetObjectItemCaseSensitive(response_obj, "artist_name");
-            response->source.png->artist_name = malloc(strlen(artist_name_obj->valuestring) + 1);
-            strcpy(response->source.png->artist_name, artist_name_obj->valuestring);
-
-            const cJSON *artist_href_obj = cJSON_GetObjectItemCaseSensitive(response_obj, "artist_href");
-            response->source.png->artist_href = malloc(strlen(artist_href_obj->valuestring) + 1);
-            strcpy(response->source.png->artist_href, artist_href_obj->valuestring);
-
-            const cJSON *source_url_obj = cJSON_GetObjectItemCaseSensitive(response_obj, "source_url");
-            response->source.png->source_url = malloc(strlen(source_url_obj->valuestring) + 1);
-            strcpy(response->source.png->source_url, source_url_obj->valuestring);
+            response->source.png->artist_name = jsondup(response_obj, "artist_name");
+            response->source.png->artist_href = jsondup(response_obj, "artist_href");
+            response->source.png->source_url = jsondup(response_obj, "source_url");
         }
     }
 
