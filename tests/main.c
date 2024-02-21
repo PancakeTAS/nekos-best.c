@@ -1,9 +1,10 @@
+#define NEKOSBEST_IMPL
 #include <nekosbest.h>
 
 int main() {
     // get endpoints
     nekos_endpoint_list list;
-    endpoints(&list);
+    nekos_endpoints(&list);
     
     // print endpoints
     printf("Available endpoints:\n");
@@ -14,7 +15,7 @@ int main() {
 
     // get 'neko' images
     nekos_result_list list2;
-    category(&list2, list.endpoints[0], 15);
+    nekos_category(&list2, list.endpoints[0], 15);
 
     // print results
     printf("Results:\n");
@@ -25,7 +26,7 @@ int main() {
 
     // get 'kiss' gifs
     nekos_result_list list3;
-    category(&list3, list.endpoints[34], 4);
+    nekos_category(&list3, list.endpoints[34], 4);
 
     // print results
     printf("Results:\n");
@@ -36,7 +37,7 @@ int main() {
 
     // search for 'senko' images
     nekos_result_list list4;
-    search(&list4, "Senko", 2, GIF, list.endpoints[31]);
+    nekos_search(&list4, "Senko", 2, GIF, list.endpoints[31]);
 
     // print results
     printf("Results:\n");

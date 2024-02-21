@@ -7,6 +7,11 @@
 #include <curl/curl.h>
 #include <cjson/cJSON.h>
 
+#define NEKOS_BASE_URL "https://nekos.best/api/v2/"
+#define NEKOS_MAX_AMOUNT 20
+#define NEKOS_MIN_QUERY_LEN 3
+#define NEKOS_MAX_QUERY_LEN 150
+
 typedef enum {
     NEKOS_OK,
     NEKOS_MEM_ERR,
@@ -53,17 +58,17 @@ typedef struct {
     size_t len;
 } nekos_result_list;
 
-#define API_URL "https://nekos.best/api/v2/"
-#define MAX_AMOUNT 20
-#define MIN_QUERY_LEN 3
-#define MAX_QUERY_LEN 150
-
 typedef struct {
     char *text; // not null-terminated
     size_t len;
 } nekos_http_response;
 
-static size_t http_response_write(void *ptr, size_t count, size_t nmemb, nekos_http_response *http_response) {
+#ifndef NEKOSBEST_IMPL
+nekos_status nekos_endpoints(nekos_endpoint_list* endpoints);
+nekos_status nekos_category(nekos_result_list *results, nekos_endpoint *endpoint, int amount);
+nekos_status nekos_search(nekos_result_list *results, char* query, int amount, nekos_format format, nekos_endpoint *endpoint);
+#else
+static size_t nekos_write_callback(void *ptr, size_t count, size_t nmemb, nekos_http_response *http_response) {
     size_t size = count * nmemb;
     size_t new_len = http_response->len + size;
 
@@ -81,7 +86,7 @@ static size_t http_response_write(void *ptr, size_t count, size_t nmemb, nekos_h
     return size;
 }
 
-static nekos_status do_request(nekos_http_response *http_response, char* url) {
+static nekos_status nekos_do_request(nekos_http_response *http_response, char* url) {
     // initialize http response object
     http_response->len = 0;
     http_response->text = malloc(1);
@@ -96,7 +101,7 @@ static nekos_status do_request(nekos_http_response *http_response, char* url) {
     // configure curl request
     curl_easy_setopt(curl, CURLOPT_URL, url);
     curl_easy_setopt(curl, CURLOPT_CA_CACHE_TIMEOUT, 604800L);
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, http_response_write);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, nekos_write_callback);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, http_response);
 
     // make request
@@ -109,17 +114,17 @@ static nekos_status do_request(nekos_http_response *http_response, char* url) {
     return NEKOS_OK;
 }
 
-static char* jsondup(const cJSON *json, char* key) {
+static char* nekos_jsondup(const cJSON *json, char* key) {
     const cJSON *element = cJSON_GetObjectItemCaseSensitive(json, key);
     char* str = malloc(strlen(element->valuestring) + 1);
     strcpy(str, element->valuestring);
     return str;
 }
 
-nekos_status endpoints(nekos_endpoint_list* endpoints) {
+nekos_status nekos_endpoints(nekos_endpoint_list* endpoints) {
     // make request
     nekos_http_response http_response;
-    nekos_status http_status = do_request(&http_response, API_URL "endpoints");
+    nekos_status http_status = nekos_do_request(&http_response, NEKOS_BASE_URL "endpoints");
     if (http_status != NEKOS_OK)
         return http_status;
 
@@ -153,18 +158,18 @@ nekos_status endpoints(nekos_endpoint_list* endpoints) {
     return NEKOS_OK;
 }
 
-nekos_status category(nekos_result_list *results, nekos_endpoint *endpoint, int amount) {
+nekos_status nekos_category(nekos_result_list *results, nekos_endpoint *endpoint, int amount) {
     // check if amount is valid
-    if (amount < 1 || amount > MAX_AMOUNT)
+    if (amount < 1 || amount > NEKOS_MAX_AMOUNT)
         return NEKOS_INVALID_PARAM_ERR;
 
     // create endpoint url
     char url[48];
-    sprintf(url, "%s%s?amount=%d", API_URL, endpoint->name, amount);
+    sprintf(url, "%s%s?amount=%d", NEKOS_BASE_URL, endpoint->name, amount);
 
     // make request
     nekos_http_response http_response;
-    nekos_status http_status = do_request(&http_response, url);
+    nekos_status http_status = nekos_do_request(&http_response, url);
     if (http_status != NEKOS_OK)
         return http_status;
 
@@ -185,15 +190,15 @@ nekos_status category(nekos_result_list *results, nekos_endpoint *endpoint, int 
         nekos_result* response = malloc(sizeof(nekos_result));
         results->responses[i++] = response;
 
-        response->url = jsondup(response_obj, "url");
+        response->url = nekos_jsondup(response_obj, "url");
         if (endpoint->format == GIF) {
             response->source.gif = malloc(sizeof(nekos_source_gif));
-            response->source.gif->anime_name = jsondup(response_obj, "anime_name");
+            response->source.gif->anime_name = nekos_jsondup(response_obj, "anime_name");
         } else {
             response->source.png = malloc(sizeof(nekos_source_png));
-            response->source.png->artist_name = jsondup(response_obj, "artist_name");
-            response->source.png->artist_href = jsondup(response_obj, "artist_href");
-            response->source.png->source_url = jsondup(response_obj, "source_url");
+            response->source.png->artist_name = nekos_jsondup(response_obj, "artist_name");
+            response->source.png->artist_href = nekos_jsondup(response_obj, "artist_href");
+            response->source.png->source_url = nekos_jsondup(response_obj, "source_url");
         }
     }
 
@@ -203,26 +208,26 @@ nekos_status category(nekos_result_list *results, nekos_endpoint *endpoint, int 
     return NEKOS_OK;
 }
 
-nekos_status search(nekos_result_list *results, char* query, int amount, nekos_format format, nekos_endpoint *endpoint) {
+nekos_status nekos_search(nekos_result_list *results, char* query, int amount, nekos_format format, nekos_endpoint *endpoint) {
     // check if amount is valid
-    if (amount < 1 || amount > MAX_AMOUNT)
+    if (amount < 1 || amount > NEKOS_MAX_AMOUNT)
         return NEKOS_INVALID_PARAM_ERR;
 
     // check if query is valid
     size_t query_len = strlen(query);
-    if (query_len < MIN_QUERY_LEN || query_len > MAX_QUERY_LEN)
+    if (query_len < NEKOS_MIN_QUERY_LEN || query_len > NEKOS_MAX_QUERY_LEN)
         return NEKOS_INVALID_PARAM_ERR;
 
     // create endpoint url
     char url[256];
     if (endpoint)
-        sprintf(url, "%ssearch?query=%s&type=%d&amount=%d&category=%s", API_URL, query, format + 1, amount, endpoint->name);
+        sprintf(url, "%ssearch?query=%s&type=%d&amount=%d&category=%s", NEKOS_BASE_URL, query, format + 1, amount, endpoint->name);
     else
-        sprintf(url, "%ssearch?query=%s&type=%d&amount=%d", API_URL, query, format + 1, amount);
+        sprintf(url, "%ssearch?query=%s&type=%d&amount=%d", NEKOS_BASE_URL, query, format + 1, amount);
 
     // make request
     nekos_http_response http_response;
-    nekos_status http_status = do_request(&http_response, url);
+    nekos_status http_status = nekos_do_request(&http_response, url);
     if (http_status != NEKOS_OK)
         return http_status;
 
@@ -243,15 +248,15 @@ nekos_status search(nekos_result_list *results, char* query, int amount, nekos_f
         nekos_result* response = malloc(sizeof(nekos_result));
         results->responses[i++] = response;
 
-        response->url = jsondup(response_obj, "url");
+        response->url = nekos_jsondup(response_obj, "url");
         if (format == GIF) {
             response->source.gif = malloc(sizeof(nekos_source_gif));
-            response->source.gif->anime_name = jsondup(response_obj, "anime_name");
+            response->source.gif->anime_name = nekos_jsondup(response_obj, "anime_name");
         } else {
             response->source.png = malloc(sizeof(nekos_source_png));
-            response->source.png->artist_name = jsondup(response_obj, "artist_name");
-            response->source.png->artist_href = jsondup(response_obj, "artist_href");
-            response->source.png->source_url = jsondup(response_obj, "source_url");
+            response->source.png->artist_name = nekos_jsondup(response_obj, "artist_name");
+            response->source.png->artist_href = nekos_jsondup(response_obj, "artist_href");
+            response->source.png->source_url = nekos_jsondup(response_obj, "source_url");
         }
     }
 
@@ -260,5 +265,7 @@ nekos_status search(nekos_result_list *results, char* query, int amount, nekos_f
     free(http_response.text);
     return NEKOS_OK;
 }
+
+#endif
 
 #endif
