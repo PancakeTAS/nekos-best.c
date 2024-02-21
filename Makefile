@@ -11,7 +11,7 @@ LDFLAGS = -lcurl -lcjson
 all: $(TEST_OBJECTS)
 
 test: $(TEST_OBJECTS)
-	./$<
+	for obj in $(TEST_OBJECTS); do ./$$obj; done
 
 clean:
 	rm -f $(TEST_OBJECTS)

@@ -21,8 +21,8 @@ typedef enum {
 } nekos_status;
 
 typedef enum {
-    PNG,
-    GIF
+    NEKOS_PNG,
+    NEKOS_GIF
 } nekos_format;
 
 typedef struct {
@@ -149,7 +149,7 @@ nekos_status nekos_endpoints(nekos_endpoint_list* endpoints) {
         strcpy(endpoint->name, name);
 
         const cJSON *format_obj = cJSON_GetObjectItemCaseSensitive(endpoint_obj, "format");
-        endpoint->format = strcmp(format_obj->valuestring, "png") == 0 ? PNG : GIF;
+        endpoint->format = strcmp(format_obj->valuestring, "png") == 0 ? NEKOS_PNG : NEKOS_GIF;
     }
     
     // cleanup
@@ -191,7 +191,7 @@ nekos_status nekos_category(nekos_result_list *results, nekos_endpoint *endpoint
         results->responses[i++] = response;
 
         response->url = nekos_jsondup(response_obj, "url");
-        if (endpoint->format == GIF) {
+        if (endpoint->format == NEKOS_GIF) {
             response->source.gif = (nekos_source_gif*) malloc(sizeof(nekos_source_gif));
             response->source.gif->anime_name = nekos_jsondup(response_obj, "anime_name");
         } else {
@@ -249,7 +249,7 @@ nekos_status nekos_search(nekos_result_list *results, const char* query, int amo
         results->responses[i++] = response;
 
         response->url = nekos_jsondup(response_obj, "url");
-        if (format == GIF) {
+        if (format == NEKOS_GIF) {
             response->source.gif = (nekos_source_gif*) malloc(sizeof(nekos_source_gif));
             response->source.gif->anime_name = nekos_jsondup(response_obj, "anime_name");
         } else {
