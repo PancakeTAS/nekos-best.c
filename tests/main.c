@@ -2,7 +2,7 @@
 
 int main() {
     // get endpoints
-    endpoint_list list;
+    nekos_endpoint_list list;
     endpoints(&list);
     
     // print endpoints
@@ -13,7 +13,7 @@ int main() {
     printf("\n\n");
 
     // get 'neko' images
-    response_list list2;
+    nekos_result_list list2;
     category(&list2, list.endpoints[0], 15);
 
     // print results
@@ -24,7 +24,7 @@ int main() {
     printf("\n");
 
     // get 'kiss' gifs
-    response_list list3;
+    nekos_result_list list3;
     category(&list3, list.endpoints[34], 4);
 
     // print results
@@ -35,7 +35,7 @@ int main() {
     printf("\n");
 
     // search for 'senko' images
-    response_list list4;
+    nekos_result_list list4;
     search(&list4, "Senko", 2, GIF, list.endpoints[31]);
 
     // print results

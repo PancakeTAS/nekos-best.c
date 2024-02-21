@@ -7,63 +7,63 @@
 #include <curl/curl.h>
 #include <cjson/cJSON.h>
 
-typedef enum ErrorMessage {
-    NEKOSBEST_OK,
-    NEKOSBEST_MEM_ERR,
-    NEKOSBEST_LIBCURL_ERR,
-    NEKOSBEST_CJSON_ERR,
-    NEKOSBEST_INVALID_PARAM_ERR
-} error_message;
+typedef enum {
+    NEKOS_OK,
+    NEKOS_MEM_ERR,
+    NEKOS_LIBCURL_ERR,
+    NEKOS_CJSON_ERR,
+    NEKOS_INVALID_PARAM_ERR
+} nekos_status;
 
-typedef enum ReponseFormat {
+typedef enum {
     PNG,
     GIF
-} response_format;
+} nekos_format;
 
-typedef struct ApiEndpoint {
+typedef struct {
     char *name;
-    response_format format;
-} api_endpoint;
+    nekos_format format;
+} nekos_endpoint;
 
-typedef struct EndpointList {
-    api_endpoint **endpoints;
+typedef struct {
+    nekos_endpoint **endpoints;
     size_t len;
-} endpoint_list;
+} nekos_endpoint_list;
 
-typedef struct GIFSource {
+typedef struct {
     char *anime_name;
-} gif_source;
+} nekos_source_gif;
 
-typedef struct PNGSource {
+typedef struct {
     char *artist_name;
     char *artist_href;
     char *source_url;
-} png_source;
+} nekos_source_png;
 
-typedef struct ApiResponse {
+typedef struct {
     union {
-        gif_source *gif;
-        png_source *png;
+        nekos_source_gif *gif;
+        nekos_source_png *png;
     } source;
     char* url;
-} api_response;
+} nekos_result;
 
-typedef struct ResponseList {
-    api_response **responses;
+typedef struct {
+    nekos_result **responses;
     size_t len;
-} response_list;
+} nekos_result_list;
 
 #define API_URL "https://nekos.best/api/v2/"
 #define MAX_AMOUNT 20
 #define MIN_QUERY_LEN 3
 #define MAX_QUERY_LEN 150
 
-typedef struct HTTPResponse {
+typedef struct {
     char *text; // not null-terminated
     size_t len;
-} http_response;
+} nekos_http_response;
 
-static size_t http_response_write(void *ptr, size_t count, size_t nmemb, http_response *http_response) {
+static size_t http_response_write(void *ptr, size_t count, size_t nmemb, nekos_http_response *http_response) {
     size_t size = count * nmemb;
     size_t new_len = http_response->len + size;
 
@@ -81,17 +81,17 @@ static size_t http_response_write(void *ptr, size_t count, size_t nmemb, http_re
     return size;
 }
 
-static error_message do_request(http_response *http_response, char* url) {
+static nekos_status do_request(nekos_http_response *http_response, char* url) {
     // initialize http response object
     http_response->len = 0;
     http_response->text = malloc(1);
     if (!http_response->text)
-        return NEKOSBEST_MEM_ERR;
+        return NEKOS_MEM_ERR;
 
     // initialize curl
     CURL *curl = curl_easy_init();
     if (!curl)
-        return NEKOSBEST_LIBCURL_ERR;
+        return NEKOS_LIBCURL_ERR;
 
     // configure curl request
     curl_easy_setopt(curl, CURLOPT_URL, url);
@@ -102,11 +102,11 @@ static error_message do_request(http_response *http_response, char* url) {
     // make request
     CURLcode res = curl_easy_perform(curl);
     if (res != CURLE_OK)
-        return NEKOSBEST_LIBCURL_ERR;
+        return NEKOS_LIBCURL_ERR;
 
     // cleanup curl
     curl_easy_cleanup(curl);
-    return NEKOSBEST_OK;
+    return NEKOS_OK;
 }
 
 static char* jsondup(const cJSON *json, char* key) {
@@ -116,28 +116,28 @@ static char* jsondup(const cJSON *json, char* key) {
     return str;
 }
 
-error_message endpoints(endpoint_list* list) {
+nekos_status endpoints(nekos_endpoint_list* endpoints) {
     // make request
-    http_response http_response;
-    error_message err = do_request(&http_response, API_URL "endpoints");
-    if (err != NEKOSBEST_OK)
-        return err;
+    nekos_http_response http_response;
+    nekos_status http_status = do_request(&http_response, API_URL "endpoints");
+    if (http_status != NEKOS_OK)
+        return http_status;
 
     // parse response
     cJSON *json = cJSON_ParseWithLength(http_response.text, http_response.len);
     if (!json || !cJSON_IsObject(json))
-        return NEKOSBEST_CJSON_ERR;
+        return NEKOS_CJSON_ERR;
 
     // parse json
-    list->len = cJSON_GetArraySize(json);
-    list->endpoints = malloc(list->len * sizeof(api_endpoint*));
+    endpoints->len = cJSON_GetArraySize(json);
+    endpoints->endpoints = malloc(endpoints->len * sizeof(nekos_endpoint*));
 
     // iterate through endpoints
     const cJSON *endpoint_obj;
     size_t i = 0;
     cJSON_ArrayForEach(endpoint_obj, json) {
-        api_endpoint* endpoint = malloc(sizeof(api_endpoint));
-        list->endpoints[i++] = endpoint;
+        nekos_endpoint* endpoint = malloc(sizeof(nekos_endpoint));
+        endpoints->endpoints[i++] = endpoint;
 
         char* name = endpoint_obj->string;
         endpoint->name = malloc(strlen(name) + 1);
@@ -150,47 +150,47 @@ error_message endpoints(endpoint_list* list) {
     // cleanup
     cJSON_Delete(json);
     free(http_response.text);
-    return NEKOSBEST_OK;
+    return NEKOS_OK;
 }
 
-error_message category(response_list *list, api_endpoint *endpoint, int amount) {
+nekos_status category(nekos_result_list *results, nekos_endpoint *endpoint, int amount) {
     // check if amount is valid
     if (amount < 1 || amount > MAX_AMOUNT)
-        return NEKOSBEST_INVALID_PARAM_ERR;
+        return NEKOS_INVALID_PARAM_ERR;
 
     // create endpoint url
     char url[48];
     sprintf(url, "%s%s?amount=%d", API_URL, endpoint->name, amount);
 
     // make request
-    http_response http_response;
-    error_message err = do_request(&http_response, url);
-    if (err != NEKOSBEST_OK)
-        return err;
+    nekos_http_response http_response;
+    nekos_status http_status = do_request(&http_response, url);
+    if (http_status != NEKOS_OK)
+        return http_status;
 
     // parse response
     cJSON *json = cJSON_ParseWithLength(http_response.text, http_response.len);
     if (!json || !cJSON_IsObject(json))
-        return NEKOSBEST_CJSON_ERR;
+        return NEKOS_CJSON_ERR;
 
     // parse json
-    cJSON *results = cJSON_GetObjectItemCaseSensitive(json, "results");
-    list->len = cJSON_GetArraySize(results);
-    list->responses = malloc(list->len * sizeof(api_response*));
+    cJSON *results_obj = cJSON_GetObjectItemCaseSensitive(json, "results");
+    results->len = cJSON_GetArraySize(results_obj);
+    results->responses = malloc(results->len * sizeof(nekos_result*));
 
     // iterate through responses
     const cJSON *response_obj;
     size_t i = 0;
-    cJSON_ArrayForEach(response_obj, results) {
-        api_response* response = malloc(sizeof(api_response));
-        list->responses[i++] = response;
+    cJSON_ArrayForEach(response_obj, results_obj) {
+        nekos_result* response = malloc(sizeof(nekos_result));
+        results->responses[i++] = response;
 
         response->url = jsondup(response_obj, "url");
         if (endpoint->format == GIF) {
-            response->source.gif = malloc(sizeof(gif_source));
+            response->source.gif = malloc(sizeof(nekos_source_gif));
             response->source.gif->anime_name = jsondup(response_obj, "anime_name");
         } else {
-            response->source.png = malloc(sizeof(png_source));
+            response->source.png = malloc(sizeof(nekos_source_png));
             response->source.png->artist_name = jsondup(response_obj, "artist_name");
             response->source.png->artist_href = jsondup(response_obj, "artist_href");
             response->source.png->source_url = jsondup(response_obj, "source_url");
@@ -200,55 +200,55 @@ error_message category(response_list *list, api_endpoint *endpoint, int amount) 
     // cleanup
     cJSON_Delete(json);
     free(http_response.text);
-    return NEKOSBEST_OK;
+    return NEKOS_OK;
 }
 
-error_message search(response_list *list, char* query, int amount, response_format type, api_endpoint *category) {
+nekos_status search(nekos_result_list *results, char* query, int amount, nekos_format format, nekos_endpoint *endpoint) {
     // check if amount is valid
     if (amount < 1 || amount > MAX_AMOUNT)
-        return NEKOSBEST_INVALID_PARAM_ERR;
+        return NEKOS_INVALID_PARAM_ERR;
 
     // check if query is valid
     size_t query_len = strlen(query);
     if (query_len < MIN_QUERY_LEN || query_len > MAX_QUERY_LEN)
-        return NEKOSBEST_INVALID_PARAM_ERR;
+        return NEKOS_INVALID_PARAM_ERR;
 
     // create endpoint url
     char url[256];
-    if (category)
-        sprintf(url, "%ssearch?query=%s&type=%d&amount=%d&category=%s", API_URL, query, type + 1, amount, category->name);
+    if (endpoint)
+        sprintf(url, "%ssearch?query=%s&type=%d&amount=%d&category=%s", API_URL, query, format + 1, amount, endpoint->name);
     else
-        sprintf(url, "%ssearch?query=%s&type=%d&amount=%d", API_URL, query, type + 1, amount);
+        sprintf(url, "%ssearch?query=%s&type=%d&amount=%d", API_URL, query, format + 1, amount);
 
     // make request
-    http_response http_response;
-    error_message err = do_request(&http_response, url);
-    if (err != NEKOSBEST_OK)
-        return err;
+    nekos_http_response http_response;
+    nekos_status http_status = do_request(&http_response, url);
+    if (http_status != NEKOS_OK)
+        return http_status;
 
     // parse response
     cJSON *json = cJSON_ParseWithLength(http_response.text, http_response.len);
     if (!json || !cJSON_IsObject(json))
-        return NEKOSBEST_CJSON_ERR;
+        return NEKOS_CJSON_ERR;
 
     // parse json
-    cJSON *results = cJSON_GetObjectItemCaseSensitive(json, "results");
-    list->len = cJSON_GetArraySize(results);
-    list->responses = malloc(list->len * sizeof(api_response*));
+    cJSON *results_obj = cJSON_GetObjectItemCaseSensitive(json, "results");
+    results->len = cJSON_GetArraySize(results_obj);
+    results->responses = malloc(results->len * sizeof(nekos_result*));
 
     // iterate through responses
     const cJSON *response_obj;
     size_t i = 0;
-    cJSON_ArrayForEach(response_obj, results) {
-        api_response* response = malloc(sizeof(api_response));
-        list->responses[i++] = response;
+    cJSON_ArrayForEach(response_obj, results_obj) {
+        nekos_result* response = malloc(sizeof(nekos_result));
+        results->responses[i++] = response;
 
         response->url = jsondup(response_obj, "url");
-        if (type == GIF) {
-            response->source.gif = malloc(sizeof(gif_source));
+        if (format == GIF) {
+            response->source.gif = malloc(sizeof(nekos_source_gif));
             response->source.gif->anime_name = jsondup(response_obj, "anime_name");
         } else {
-            response->source.png = malloc(sizeof(png_source));
+            response->source.png = malloc(sizeof(nekos_source_png));
             response->source.png->artist_name = jsondup(response_obj, "artist_name");
             response->source.png->artist_href = jsondup(response_obj, "artist_href");
             response->source.png->source_url = jsondup(response_obj, "source_url");
@@ -258,7 +258,7 @@ error_message search(response_list *list, char* query, int amount, response_form
     // cleanup
     cJSON_Delete(json);
     free(http_response.text);
-    return NEKOSBEST_OK;
+    return NEKOS_OK;
 }
 
 #endif
