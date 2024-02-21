@@ -1,4 +1,4 @@
-#include "nekosbest.h"
+#include <nekosbest.h>
 
 int main() {
     // get endpoints

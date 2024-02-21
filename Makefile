@@ -1,29 +1,19 @@
-SOURCES := $(wildcard src/*.c)
-OBJECTS := $(SOURCES:.c=.o)
-TARGET = nekosbest-c
+TEST_SOURCES := $(wildcard tests/*.c)
+TEST_OBJECTS := $(TEST_SOURCES:.c=.o)
 
-MAKE = make
 CC = gcc
-CFLAGS = -Wall -Wextra -Werror -std=c99 -pedantic -g
+CFLAGS = -Wall -Wextra -Werror -std=c99 -pedantic -g -Isrc
 LDFLAGS = -lcurl -lcjson
 
 %.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(LDFLAGS) $< -o $@
 
-$(TARGET): $(OBJECTS)
-	$(CC) $(CFLAGS) $(LDFLAGS) $(OBJECTS) -o $@ 
+all: $(TEST_OBJECTS)
 
-all: $(TARGET)
+test: $(TEST_OBJECTS)
+	./$<
 
 clean:
-	rm -f $(OBJECTS) $(TARGET)
+	rm -f $(TEST_OBJECTS)
 
-run: $(TARGET)
-	./$(TARGET)
-
-debug: $(TARGET)
-	gdb $(TARGET)
-
-.PHONY: all clean run
-
-
+.PHONY: $(TEST_SOURCES) all test clean

@@ -1,6 +1,5 @@
 # Build files
 *.o
-nekosbest-c
 
 # Visual Studio Code
 .vscode/
