@@ -1,3 +1,8 @@
+/**
+ * \file
+ * This file contains structs and functions for interacting with the nekos.best API.
+ */
+
 #ifndef NEKOSBEST_H
 #define NEKOSBEST_H
 
@@ -11,68 +16,303 @@ extern "C" {
 #include <curl/curl.h>
 #include <cjson/cJSON.h>
 
+/**
+ * Base URL for nekos.best API.
+ */
 #define NEKOS_BASE_URL "https://nekos.best/api/v2/"
+
+/**
+ * Maximum amount of results that can be requested.
+ */
 #define NEKOS_MAX_AMOUNT 20
+
+/**
+ * Minimum length of query string.
+ */
 #define NEKOS_MIN_QUERY_LEN 3
+
+/**
+ * Maximum length of query string.
+ */
 #define NEKOS_MAX_QUERY_LEN 150
 
+/**
+ * Status codes for the nekos.best c wrapper. 
+ */
 typedef enum {
+
+    /**
+     * Indicates that the operation was successful.
+     */
     NEKOS_OK,
+
+    /**
+     * Indicates that there was a memory allocation error.
+     */
     NEKOS_MEM_ERR,
+
+    /**
+     * Indicates that there was an error with libcurl. 
+     */
     NEKOS_LIBCURL_ERR,
+
+    /**
+     * Indicates that there was an error with cJSON. 
+     */
     NEKOS_CJSON_ERR,
+
+    /**
+     * Indicates that an invalid parameter was passed to a function. 
+     */
     NEKOS_INVALID_PARAM_ERR
+
 } nekos_status;
 
+/**
+ * Enum for the format of the image. 
+ */
 typedef enum {
+
+    /**
+     * Indicates that the response image is a png and \link nekos_source_png nekos_source_png \endlink should be used.
+     */
     NEKOS_PNG,
+
+    /**
+     * Indicates that the response image is a gif and \link nekos_source_gif nekos_source_gif \endlink should be used.
+     */
     NEKOS_GIF
+
 } nekos_format;
 
+/**
+ * Struct for an endpoint/category.
+ */
 typedef struct {
+
+    /**
+     * Name of the endpoint/category.
+     */
     char *name;
+
+    /**
+     * Format of the endpoint/category.
+     */
     nekos_format format;
+
 } nekos_endpoint;
 
+/**
+ * Struct for a list of endpoints/categories.
+ */
 typedef struct {
+
+    /**
+     * [out] Array of endpoints/categories. 
+     */
     nekos_endpoint **endpoints;
+
+    /**
+     * [out] Amount of endpoints/categories.
+     */
     size_t len;
+
 } nekos_endpoint_list;
 
+/**
+ * Struct for a gif source.
+ */
 typedef struct {
+
+    /**
+     * [out] Name of the anime the gif is from.
+     */
     char *anime_name;
+
 } nekos_source_gif;
 
+/**
+ * Struct for a png source.
+ */
 typedef struct {
+
+    /**
+     * [out] Name of the artist of the png.
+     */
     char *artist_name;
+
+    /**
+     * [out] URL to the artist's page.
+     */
     char *artist_href;
+
+    /**
+     * [out] URL to the source of the png.
+     */
     char *source_url;
+
 } nekos_source_png;
 
+/**
+ * Struct for a result image.
+ */
 typedef struct {
+
+    /**
+     * [out] Source information of the image.
+     */
     union {
+
+        /**
+         * [out] Source information for a gif. Only use if the format is \link NEKOS_GIF nekos_format::NEKOS_GIF \endlink.
+         */
         nekos_source_gif *gif;
+
+        /**
+         * [out] Source information for a png. Only use if the format is \link NEKOS_PNG nekos_format::NEKOS_PNG \endlink. 
+         */
         nekos_source_png *png;
+
     } source;
+
+    /**
+     * [out] URL to the image.
+     */
     char* url;
+
 } nekos_result;
 
+/**
+ * Struct for a list of result images. 
+ */
 typedef struct {
+
+    /**
+     * [out] Array of result images.
+     */
     nekos_result **responses;
+
+    /**
+     * [out] Amount of result images.
+     */
     size_t len;
+
 } nekos_result_list;
 
+/**
+ * Struct for an http response.
+ */
 typedef struct {
-    char *text; // not null-terminated
+
+    /**
+     * [out] Text of the response. Not null-terminated. 
+     */
+    char *text;
+
+    /**
+     * [out] Length of the response text. 
+     */
     size_t len;
+
 } nekos_http_response;
 
 #ifndef NEKOSBEST_IMPL
+
+/**
+ * Get a list of endpoints/categories.
+ * 
+ * This function fetches the `endpoints` endpoint of the api
+ * and parses the response into a list of endpoints.
+ * 
+ * It will allocate memory for the list of endpoints and the endpoints themselves.
+ * 
+ * \param [out] endpoints
+ *   Pointer to a \link nekos_endpoint_list nekos_endpoint_list \endlink to store the endpoints in.
+ * 
+ * \return
+ *   ::NEKOS_OK \n
+ *   ::NEKOS_MEM_ERR \n
+ *   ::NEKOS_LIBCURL_ERR \n
+ *   ::NEKOS_CJSON_ERR
+ */
 nekos_status nekos_endpoints(nekos_endpoint_list* endpoints);
+
+/**
+ * Get a list of images from a category.
+ * 
+ * This function fetches the specified category endpoint of the api
+ * and parses the response into a list of images.
+ * 
+ * It will allocate memory for the list of results, the results themselves, and the source information.
+ * 
+ * \param [out] results
+ *   Pointer to a \link nekos_result_list nekos_result_list \endlink to store the results in.
+ * \param [in] endpoint
+ *   Pointer to a \link nekos_endpoint nekos_endpoint \endlink to specify the category.
+ * \param [in] amount
+ *   Amount of images to fetch. Must be between 1 and \link NEKOS_MAX_AMOUNT \endlink.
+ * 
+ * \return
+ *   ::NEKOS_OK \n
+ *   ::NEKOS_MEM_ERR \n
+ *   ::NEKOS_LIBCURL_ERR \n
+ *   ::NEKOS_CJSON_ERR \n
+ *   ::NEKOS_INVALID_PARAM_ERR
+ */
 nekos_status nekos_category(nekos_result_list *results, nekos_endpoint *endpoint, int amount);
+
+/**
+ * Search for images.
+ * 
+ * This function fetches the `search` endpoint of the api
+ * and parses the response into a list of images.
+ * 
+ * The search can optionally specify a endpoint/category.
+ * 
+ * It will allocate memory for the list of results, the results themselves, and the source information.
+ * 
+ * \param [out] results
+ *   Pointer to a \link nekos_result_list nekos_result_list \endlink to store the results in.
+ * \param [in] query
+ *   Query to search for. Must be between \link NEKOS_MIN_QUERY_LEN \endlink and \link NEKOS_MAX_QUERY_LEN \endlink.
+ * \param [in] amount
+ *   Amount of images to fetch. Must be between 1 and \link NEKOS_MAX_AMOUNT \endlink.
+ * \param [in] format
+ *   Format of the images to search for.
+ * \param [in] endpoint
+ *   Pointer to a \link nekos_endpoint nekos_endpoint \endlink to specify a category. Can be NULL.
+ * 
+ * \return
+ *   ::NEKOS_OK \n
+ *   ::NEKOS_MEM_ERR \n
+ *   ::NEKOS_LIBCURL_ERR \n
+ *   ::NEKOS_CJSON_ERR \n
+ *   ::NEKOS_INVALID_PARAM_ERR
+ */
 nekos_status nekos_search(nekos_result_list *results, const char* query, int amount, nekos_format format, nekos_endpoint *endpoint);
+
+/**
+ * Download an image.
+ * 
+ * This function fetches the specified image url
+ * and stores the response in a \link nekos_http_response nekos_http_response \endlink.
+ * 
+ * It will allocate memory for the response text.
+ * 
+ * \param [out] http_response
+ *   Pointer to a \link nekos_http_response nekos_http_response \endlink to store the response in.
+ * \param [in] url
+ *   URL of the image to download.
+ * 
+ * \return
+ *   ::NEKOS_OK \n
+ *   ::NEKOS_MEM_ERR \n
+ *   ::NEKOS_LIBCURL_ERR
+ */
 nekos_status nekos_download(nekos_http_response *http_response, const char* url);
-#else
+
+#else // NEKOSBEST_IMPL
+
 static size_t nekos_write_callback(void *ptr, size_t count, size_t nmemb, nekos_http_response *http_response) {
     size_t size = count * nmemb;
     size_t new_len = http_response->len + size;
@@ -274,10 +514,10 @@ nekos_status nekos_search(nekos_result_list *results, const char* query, int amo
 nekos_status nekos_download(nekos_http_response *http_response, const char* url) {
     return nekos_do_request(http_response, url);
 }
-#endif
+#endif // NEKOSBEST_IMPL
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif
+#endif // NEKOSBEST_H

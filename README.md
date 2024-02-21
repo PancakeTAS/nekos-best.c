@@ -10,8 +10,8 @@ Join the official Discord server [here](https://nekos.best/discord?ref=py).
 ## Installation
 (work in progress)
 
-## Example
+## Documentation
 (work in progress)
 
-> [!IMPORTANT]
-> first time c dev uwu pls don't be mad if break
+## Example
+(work in progress)
