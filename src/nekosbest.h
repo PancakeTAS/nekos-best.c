@@ -66,14 +66,14 @@ typedef struct {
 #ifndef NEKOSBEST_IMPL
 nekos_status nekos_endpoints(nekos_endpoint_list* endpoints);
 nekos_status nekos_category(nekos_result_list *results, nekos_endpoint *endpoint, int amount);
-nekos_status nekos_search(nekos_result_list *results, char* query, int amount, nekos_format format, nekos_endpoint *endpoint);
+nekos_status nekos_search(nekos_result_list *results, const char* query, int amount, nekos_format format, nekos_endpoint *endpoint);
 #else
 static size_t nekos_write_callback(void *ptr, size_t count, size_t nmemb, nekos_http_response *http_response) {
     size_t size = count * nmemb;
     size_t new_len = http_response->len + size;
 
     // resize response text
-    char* new_text = realloc(http_response->text, new_len + 1);
+    char* new_text = (char*) realloc(http_response->text, new_len + 1);
     if (!new_text) {
         free(http_response->text);
         return CURLE_ABORTED_BY_CALLBACK;
@@ -86,10 +86,10 @@ static size_t nekos_write_callback(void *ptr, size_t count, size_t nmemb, nekos_
     return size;
 }
 
-static nekos_status nekos_do_request(nekos_http_response *http_response, char* url) {
+static nekos_status nekos_do_request(nekos_http_response *http_response, const char* url) {
     // initialize http response object
     http_response->len = 0;
-    http_response->text = malloc(1);
+    http_response->text = (char*) malloc(1);
     if (!http_response->text)
         return NEKOS_MEM_ERR;
 
@@ -114,9 +114,9 @@ static nekos_status nekos_do_request(nekos_http_response *http_response, char* u
     return NEKOS_OK;
 }
 
-static char* nekos_jsondup(const cJSON *json, char* key) {
+static char* nekos_jsondup(const cJSON *json, const char* key) {
     const cJSON *element = cJSON_GetObjectItemCaseSensitive(json, key);
-    char* str = malloc(strlen(element->valuestring) + 1);
+    char* str = (char*) malloc(strlen(element->valuestring) + 1);
     strcpy(str, element->valuestring);
     return str;
 }
@@ -135,17 +135,17 @@ nekos_status nekos_endpoints(nekos_endpoint_list* endpoints) {
 
     // parse json
     endpoints->len = cJSON_GetArraySize(json);
-    endpoints->endpoints = malloc(endpoints->len * sizeof(nekos_endpoint*));
+    endpoints->endpoints = (nekos_endpoint**) malloc(endpoints->len * sizeof(nekos_endpoint*));
 
     // iterate through endpoints
     const cJSON *endpoint_obj;
     size_t i = 0;
     cJSON_ArrayForEach(endpoint_obj, json) {
-        nekos_endpoint* endpoint = malloc(sizeof(nekos_endpoint));
+        nekos_endpoint* endpoint = (nekos_endpoint*) malloc(sizeof(nekos_endpoint));
         endpoints->endpoints[i++] = endpoint;
 
         char* name = endpoint_obj->string;
-        endpoint->name = malloc(strlen(name) + 1);
+        endpoint->name = (char*) malloc(strlen(name) + 1);
         strcpy(endpoint->name, name);
 
         const cJSON *format_obj = cJSON_GetObjectItemCaseSensitive(endpoint_obj, "format");
@@ -181,21 +181,21 @@ nekos_status nekos_category(nekos_result_list *results, nekos_endpoint *endpoint
     // parse json
     cJSON *results_obj = cJSON_GetObjectItemCaseSensitive(json, "results");
     results->len = cJSON_GetArraySize(results_obj);
-    results->responses = malloc(results->len * sizeof(nekos_result*));
+    results->responses = (nekos_result**) malloc(results->len * sizeof(nekos_result*));
 
     // iterate through responses
     const cJSON *response_obj;
     size_t i = 0;
     cJSON_ArrayForEach(response_obj, results_obj) {
-        nekos_result* response = malloc(sizeof(nekos_result));
+        nekos_result* response = (nekos_result*) malloc(sizeof(nekos_result));
         results->responses[i++] = response;
 
         response->url = nekos_jsondup(response_obj, "url");
         if (endpoint->format == GIF) {
-            response->source.gif = malloc(sizeof(nekos_source_gif));
+            response->source.gif = (nekos_source_gif*) malloc(sizeof(nekos_source_gif));
             response->source.gif->anime_name = nekos_jsondup(response_obj, "anime_name");
         } else {
-            response->source.png = malloc(sizeof(nekos_source_png));
+            response->source.png = (nekos_source_png*) malloc(sizeof(nekos_source_png));
             response->source.png->artist_name = nekos_jsondup(response_obj, "artist_name");
             response->source.png->artist_href = nekos_jsondup(response_obj, "artist_href");
             response->source.png->source_url = nekos_jsondup(response_obj, "source_url");
@@ -208,7 +208,7 @@ nekos_status nekos_category(nekos_result_list *results, nekos_endpoint *endpoint
     return NEKOS_OK;
 }
 
-nekos_status nekos_search(nekos_result_list *results, char* query, int amount, nekos_format format, nekos_endpoint *endpoint) {
+nekos_status nekos_search(nekos_result_list *results, const char* query, int amount, nekos_format format, nekos_endpoint *endpoint) {
     // check if amount is valid
     if (amount < 1 || amount > NEKOS_MAX_AMOUNT)
         return NEKOS_INVALID_PARAM_ERR;
@@ -239,21 +239,21 @@ nekos_status nekos_search(nekos_result_list *results, char* query, int amount, n
     // parse json
     cJSON *results_obj = cJSON_GetObjectItemCaseSensitive(json, "results");
     results->len = cJSON_GetArraySize(results_obj);
-    results->responses = malloc(results->len * sizeof(nekos_result*));
+    results->responses = (nekos_result**) malloc(results->len * sizeof(nekos_result*));
 
     // iterate through responses
     const cJSON *response_obj;
     size_t i = 0;
     cJSON_ArrayForEach(response_obj, results_obj) {
-        nekos_result* response = malloc(sizeof(nekos_result));
+        nekos_result* response = (nekos_result*) malloc(sizeof(nekos_result));
         results->responses[i++] = response;
 
         response->url = nekos_jsondup(response_obj, "url");
         if (format == GIF) {
-            response->source.gif = malloc(sizeof(nekos_source_gif));
+            response->source.gif = (nekos_source_gif*) malloc(sizeof(nekos_source_gif));
             response->source.gif->anime_name = nekos_jsondup(response_obj, "anime_name");
         } else {
-            response->source.png = malloc(sizeof(nekos_source_png));
+            response->source.png = (nekos_source_png*) malloc(sizeof(nekos_source_png));
             response->source.png->artist_name = nekos_jsondup(response_obj, "artist_name");
             response->source.png->artist_href = nekos_jsondup(response_obj, "artist_href");
             response->source.png->source_url = nekos_jsondup(response_obj, "source_url");
