@@ -71,6 +71,7 @@ typedef struct {
 nekos_status nekos_endpoints(nekos_endpoint_list* endpoints);
 nekos_status nekos_category(nekos_result_list *results, nekos_endpoint *endpoint, int amount);
 nekos_status nekos_search(nekos_result_list *results, const char* query, int amount, nekos_format format, nekos_endpoint *endpoint);
+nekos_status nekos_download(nekos_http_response *http_response, const char* url);
 #else
 static size_t nekos_write_callback(void *ptr, size_t count, size_t nmemb, nekos_http_response *http_response) {
     size_t size = count * nmemb;
@@ -268,6 +269,10 @@ nekos_status nekos_search(nekos_result_list *results, const char* query, int amo
     cJSON_Delete(json);
     free(http_response.text);
     return NEKOS_OK;
+}
+
+nekos_status nekos_download(nekos_http_response *http_response, const char* url) {
+    return nekos_do_request(http_response, url);
 }
 #endif
 
