@@ -1,6 +1,10 @@
 #ifndef NEKOSBEST_H
 #define NEKOSBEST_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -164,8 +168,8 @@ nekos_status nekos_category(nekos_result_list *results, nekos_endpoint *endpoint
         return NEKOS_INVALID_PARAM_ERR;
 
     // create endpoint url
-    char url[48];
-    sprintf(url, "%s%s?amount=%d", NEKOS_BASE_URL, endpoint->name, amount);
+    char url[96];
+    snprintf(url, 96, "%s%s?amount=%d", NEKOS_BASE_URL, endpoint->name, amount);
 
     // make request
     nekos_http_response http_response;
@@ -221,9 +225,9 @@ nekos_status nekos_search(nekos_result_list *results, const char* query, int amo
     // create endpoint url
     char url[256];
     if (endpoint)
-        sprintf(url, "%ssearch?query=%s&type=%d&amount=%d&category=%s", NEKOS_BASE_URL, query, format + 1, amount, endpoint->name);
+        snprintf(url, 256, "%ssearch?query=%s&type=%d&amount=%d&category=%s", NEKOS_BASE_URL, query, format + 1, amount, endpoint->name);
     else
-        sprintf(url, "%ssearch?query=%s&type=%d&amount=%d", NEKOS_BASE_URL, query, format + 1, amount);
+        snprintf(url, 256, "%ssearch?query=%s&type=%d&amount=%d", NEKOS_BASE_URL, query, format + 1, amount);
 
     // make request
     nekos_http_response http_response;
@@ -265,7 +269,10 @@ nekos_status nekos_search(nekos_result_list *results, const char* query, int amo
     free(http_response.text);
     return NEKOS_OK;
 }
+#endif
 
+#ifdef __cplusplus
+}
 #endif
 
 #endif

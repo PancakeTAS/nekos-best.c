@@ -17,7 +17,7 @@ int main() {
         fprintf(stderr, RED "failed!" BOLD " Error code: %d\n", status);
         return EXIT_FAILURE;
     }
-    fprintf(stderr, GREEN "success.\n\n");
+    fprintf(stderr, GREEN "success.\n");
 
     // print results
     fprintf(stderr, WHITE BOLD "-> \\\n");

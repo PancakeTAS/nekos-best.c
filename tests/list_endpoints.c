@@ -12,7 +12,7 @@ int main() {
         fprintf(stderr, RED "failed!" BOLD " Error code: %d\n", status);
         return EXIT_FAILURE;
     }
-    fprintf(stderr, GREEN "success.\n\n");
+    fprintf(stderr, GREEN "success.\n");
 
     // print endpoints
     fprintf(stderr, WHITE BOLD "->" PINK);

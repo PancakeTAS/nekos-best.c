@@ -1,19 +1,27 @@
 TEST_SOURCES := $(wildcard tests/*.c)
 TEST_OBJECTS := $(TEST_SOURCES:.c=.o)
 
+TEST_SOURCES_CPP := $(wildcard tests/*.cpp)
+TEST_OBJECTS_CPP := $(TEST_SOURCES_CPP:.cpp=.o)
+
 CC = gcc
 CFLAGS = -Wall -Wextra -Werror -std=c99 -pedantic -g -Isrc
+CPPFLAGS = -Wall -Wextra -Werror -pedantic -g -Isrc
 LDFLAGS = -lcurl -lcjson
 
 %.o: %.c
 	$(CC) $(CFLAGS) $(LDFLAGS) $< -o $@
 
-all: $(TEST_OBJECTS)
+%.o: %.cpp
+	$(CXX) $(CPPFLAGS) $(LDFLAGS) $< -o $@
 
-test: $(TEST_OBJECTS)
-	for obj in $(TEST_OBJECTS); do ./$$obj; done
+all: $(TEST_OBJECTS) $(TEST_OBJECTS_CPP)
+
+test: $(TEST_OBJECTS) $(TEST_OBJECTS_CPP)
+	@for obj in $(TEST_OBJECTS); do ./$$obj; done
+	@for obj in $(TEST_OBJECTS_CPP); do ./$$obj; done
 
 clean:
-	rm -f $(TEST_OBJECTS)
+	rm -f $(TEST_OBJECTS) $(TEST_OBJECTS_CPP)
 
-.PHONY: $(TEST_SOURCES) all test clean
+.PHONY: $(TEST_SOURCES) $(TEST_SOURCES_CPP) all test clean
