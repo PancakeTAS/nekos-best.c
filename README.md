@@ -11,7 +11,8 @@ Join the official Discord server [here](https://nekos.best/discord?ref=py).
 (work in progress)
 
 ## Documentation
-(work in progress)
+Doxygen documentation is available [here](https://pancake.gay/nekos-best.c).
+(Jump to [nekosbest.h](https://pancake.gay/nekos-best.c/nekosbest_8h.html))
 
 ## Example
 (work in progress)
