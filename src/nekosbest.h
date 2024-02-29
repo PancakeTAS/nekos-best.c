@@ -208,8 +208,10 @@ void nekos_free_endpoints(nekos_endpoint_list* endpoints);
  * 
  * \param [in] result
  *   Pointer to a \link nekos_result nekos_result \endlink to free.
+ * \param [in] format
+ *   Format of the result.
  */
-void nekos_free_result(nekos_result* result);
+void nekos_free_result(nekos_result* result, nekos_format format);
 
 /**
  * Free a list of results.
@@ -218,8 +220,10 @@ void nekos_free_result(nekos_result* result);
  * 
  * \param [in] results
  *   Pointer to a \link nekos_result_list nekos_result_list \endlink to free.
+ * \param [in] format
+ *   Format of the results.
  */
-void nekos_free_results(nekos_result_list* results);
+void nekos_free_results(nekos_result_list* results, nekos_format format);
 
 #else // NEKOSBEST_IMPL
 
