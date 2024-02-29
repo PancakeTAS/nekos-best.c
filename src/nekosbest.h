@@ -311,6 +311,46 @@ nekos_status nekos_search(nekos_result_list *results, const char* query, int amo
  */
 nekos_status nekos_download(nekos_http_response *http_response, const char* url);
 
+/**
+ * Free an endpoint.
+ * 
+ * This function frees the memory allocated for the endpoint.
+ * 
+ * \param [in] endpoint
+ *   Pointer to a \link nekos_endpoint nekos_endpoint \endlink to free.
+*/
+void nekos_free_endpoint(nekos_endpoint* endpoint);
+
+/**
+ * Free a list of endpoints.
+ * 
+ * This function frees the memory allocated for the list of endpoints and the endpoints themselves.
+ * 
+ * \param [in] endpoints
+ *   Pointer to a \link nekos_endpoint_list nekos_endpoint_list \endlink to free.
+ */
+void nekos_free_endpoints(nekos_endpoint_list* endpoints);
+
+/**
+ * Free a result.
+ * 
+ * This function frees the memory allocated for the result and the source information.
+ * 
+ * \param [in] result
+ *   Pointer to a \link nekos_result nekos_result \endlink to free.
+ */
+void nekos_free_result(nekos_result* result);
+
+/**
+ * Free a list of results.
+ * 
+ * This function frees the memory allocated for the list of results, the results themselves, and the source information.
+ * 
+ * \param [in] results
+ *   Pointer to a \link nekos_result_list nekos_result_list \endlink to free.
+ */
+void nekos_free_results(nekos_result_list* results);
+
 #else // NEKOSBEST_IMPL
 
 static size_t nekos_write_callback(void *ptr, size_t count, size_t nmemb, nekos_http_response *http_response) {
@@ -514,6 +554,42 @@ nekos_status nekos_search(nekos_result_list *results, const char* query, int amo
 nekos_status nekos_download(nekos_http_response *http_response, const char* url) {
     return nekos_do_request(http_response, url);
 }
+
+void nekos_free_endpoint(nekos_endpoint* endpoint) {
+    free(endpoint->name);
+    free(endpoint);
+}
+
+void nekos_free_endpoints(nekos_endpoint_list* endpoints) {
+    for (size_t i = 0; i < endpoints->len; i++)
+        nekos_free_endpoint(endpoints->endpoints[i]);
+    free(endpoints->endpoints);
+}
+
+void nekos_free_result(nekos_result* result, nekos_format format) {
+    free(result->url);
+    if (format == NEKOS_GIF) {
+        free(result->source.gif->anime_name);
+        free(result->source.gif);
+    } else {
+        free(result->source.png->artist_name);
+        free(result->source.png->artist_href);
+        free(result->source.png->source_url);
+        free(result->source.png);
+    }
+    free(result);
+}
+
+void nekos_free_results(nekos_result_list* results, nekos_format format) {
+    for (size_t i = 0; i < results->len; i++)
+        nekos_free_result(results->responses[i], format);
+    free(results->responses);
+}
+
+void nekos_free_http_response(nekos_http_response* http_response) {
+    free(http_response->text);
+}
+
 #endif // NEKOSBEST_IMPL
 
 #ifdef __cplusplus

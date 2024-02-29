@@ -21,6 +21,10 @@ test: $(TEST_OBJECTS) $(TEST_OBJECTS_CPP)
 	@for obj in $(TEST_OBJECTS); do ./$$obj; done
 	@for obj in $(TEST_OBJECTS_CPP); do ./$$obj; done
 
+valgrind: $(TEST_OBJECTS) $(TEST_OBJECTS_CPP)
+	@for obj in $(TEST_OBJECTS); do valgrind --leak-check=full ./$$obj; done
+	@for obj in $(TEST_OBJECTS_CPP); do valgrind --leak-check=full ./$$obj; done
+
 clean:
 	rm -f $(TEST_OBJECTS) $(TEST_OBJECTS_CPP)
 

@@ -23,6 +23,9 @@ int main() {
     }
     fprintf(stderr, GREEN "success.\n");
     fprintf(stderr, WHITE BOLD "-> filesize matches\n");
+
+    // free response
+    nekos_free_http_response(&http_response);
     
     return EXIT_SUCCESS;
 }

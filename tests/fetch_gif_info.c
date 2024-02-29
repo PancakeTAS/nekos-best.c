@@ -25,5 +25,8 @@ int main() {
         fprintf(stderr, PINK BOLD "  %s" WHITE BOLD " from " CYAN BOLD "%s\n", results.responses[i]->url, results.responses[i]->source.gif->anime_name);
     }
 
+    // free results
+    nekos_free_results(&results, NEKOS_GIF);
+
     return EXIT_SUCCESS;
 }

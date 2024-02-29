@@ -19,6 +19,9 @@ int main() {
     for (size_t i = 0; i < endpoints.len; i++)
         fprintf(stderr, " %s", endpoints.endpoints[i]->name);
     fprintf(stderr, "\n" WHITE);
+
+    // free endpoints
+    nekos_free_endpoints(&endpoints);
     
     return EXIT_SUCCESS;
 }
