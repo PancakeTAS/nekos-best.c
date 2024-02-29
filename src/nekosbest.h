@@ -410,7 +410,7 @@ nekos_status nekos_category(nekos_result_list *results, nekos_endpoint *endpoint
 
     // create endpoint url
     char url[96];
-    snprintf(url, 96, "%s%s?amount=%d", NEKOS_BASE_URL, endpoint->name, amount);
+    snprintf(url, 96, NEKOS_BASE_URL "%s?amount=%d", endpoint->name, amount);
 
     // make request
     nekos_http_response http_response;
@@ -466,9 +466,9 @@ nekos_status nekos_search(nekos_result_list *results, const char* query, int amo
     // create endpoint url
     char url[256];
     if (endpoint)
-        snprintf(url, 256, "%ssearch?query=%s&type=%d&amount=%d&category=%s", NEKOS_BASE_URL, query, format + 1, amount, endpoint->name);
+        snprintf(url, 256, NEKOS_BASE_URL "search?query=%s&type=%d&amount=%d&category=%s", query, format + 1, amount, endpoint->name);
     else
-        snprintf(url, 256, "%ssearch?query=%s&type=%d&amount=%d", NEKOS_BASE_URL, query, format + 1, amount);
+        snprintf(url, 256, NEKOS_BASE_URL "search?query=%s&type=%d&amount=%d", query, format + 1, amount);
 
     // make request
     nekos_http_response http_response;
