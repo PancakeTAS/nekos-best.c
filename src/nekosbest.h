@@ -1,7 +1,4 @@
-/**
- * \file
- * This file contains structs and functions for interacting with the nekos.best API.
- */
+/// \file This file contains structs and functions for interacting with the nekos.best API.
 
 #ifndef NEKOSBEST_H
 #define NEKOSBEST_H
@@ -16,204 +13,77 @@ extern "C" {
 #include <curl/curl.h>
 #include <cjson/cJSON.h>
 
-/**
- * Base URL for nekos.best API.
- */
+/// Base URL for nekos.best API.
 #define NEKOS_BASE_URL "https://nekos.best/api/v2/"
 
-/**
- * Maximum amount of results that can be requested.
- */
+/// Maximum amount of results that can be requested.
 #define NEKOS_MAX_AMOUNT 20
 
-/**
- * Minimum length of query string.
- */
+/// Minimum length of query string.
 #define NEKOS_MIN_QUERY_LEN 3
-
-/**
- * Maximum length of query string.
- */
+/// Maximum length of query string.
 #define NEKOS_MAX_QUERY_LEN 150
 
-/**
- * Status codes for the nekos.best c wrapper. 
- */
+/// Status codes for the nekos.best c wrapper.
 typedef enum {
-
-    /**
-     * Indicates that the operation was successful.
-     */
-    NEKOS_OK,
-
-    /**
-     * Indicates that there was a memory allocation error.
-     */
-    NEKOS_MEM_ERR,
-
-    /**
-     * Indicates that there was an error with libcurl. 
-     */
-    NEKOS_LIBCURL_ERR,
-
-    /**
-     * Indicates that there was an error with cJSON. 
-     */
-    NEKOS_CJSON_ERR,
-
-    /**
-     * Indicates that an invalid parameter was passed to a function. 
-     */
-    NEKOS_INVALID_PARAM_ERR
-
+    NEKOS_OK, ///< Indicates that the operation was successful.
+    NEKOS_MEM_ERR, ///< Indicates that there was a memory allocation error.
+    NEKOS_LIBCURL_ERR, ///< Indicates that there was an error with libcurl.
+    NEKOS_CJSON_ERR, ///< Indicates that there was an error with cJSON.
+    NEKOS_INVALID_PARAM_ERR ///< Indicates that an invalid parameter was passed to a function.
 } nekos_status;
 
-/**
- * Enum for the format of the image. 
- */
+/// Enum for the format of the image.
 typedef enum {
-
-    /**
-     * Indicates that the response image is a png and \link nekos_source_png nekos_source_png \endlink should be used.
-     */
-    NEKOS_PNG,
-
-    /**
-     * Indicates that the response image is a gif and \link nekos_source_gif nekos_source_gif \endlink should be used.
-     */
-    NEKOS_GIF
-
+    NEKOS_PNG, ///< Indicates that the response image is a png and \link nekos_source_png nekos_source_png \endlink should be used.
+    NEKOS_GIF ///< Indicates that the response image is a gif and \link nekos_source_gif nekos_source_gif \endlink should be used.
 } nekos_format;
 
-/**
- * Struct for an endpoint/category.
- */
+/// Struct for an endpoint/category.
 typedef struct {
-
-    /**
-     * Name of the endpoint/category.
-     */
-    char *name;
-
-    /**
-     * Format of the endpoint/category.
-     */
-    nekos_format format;
-
+    char *name; ///< [out] Name of the endpoint/category.
+    nekos_format format; ///< [out] Format of the endpoint/category.
 } nekos_endpoint;
 
-/**
- * Struct for a list of endpoints/categories.
- */
+/// Struct for a list of endpoints/categories.
 typedef struct {
-
-    /**
-     * [out] Array of endpoints/categories. 
-     */
-    nekos_endpoint **endpoints;
-
-    /**
-     * [out] Amount of endpoints/categories.
-     */
-    size_t len;
-
+    nekos_endpoint **endpoints; ///< [out] Array of endpoints/categories.
+    size_t len; ///< [out] Amount of endpoints/categories.
 } nekos_endpoint_list;
 
-/**
- * Struct for a gif source.
- */
+/// Struct for a gif source.
 typedef struct {
-
-    /**
-     * [out] Name of the anime the gif is from.
-     */
-    char *anime_name;
-
+    char *anime_name; ///< [out] Name of the anime the gif is from.
 } nekos_source_gif;
 
-/**
- * Struct for a png source.
- */
+/// Struct for a png source.
 typedef struct {
-
-    /**
-     * [out] Name of the artist of the png.
-     */
-    char *artist_name;
-
-    /**
-     * [out] URL to the artist's page.
-     */
-    char *artist_href;
-
-    /**
-     * [out] URL to the source of the png.
-     */
-    char *source_url;
-
+    char *artist_name; ///< [out] Name of the artist of the png.
+    char *artist_href; ///< [out] URL to the artist's page.
+    char *source_url; ///< [out] URL to the source of the png.
 } nekos_source_png;
 
-/**
- * Struct for a result image.
- */
+/// Struct for a result image.
 typedef struct {
-
-    /**
-     * [out] Source information of the image.
-     */
     union {
-
-        /**
-         * [out] Source information for a gif. Only use if the format is \link NEKOS_GIF nekos_format::NEKOS_GIF \endlink.
-         */
-        nekos_source_gif *gif;
-
-        /**
-         * [out] Source information for a png. Only use if the format is \link NEKOS_PNG nekos_format::NEKOS_PNG \endlink. 
-         */
-        nekos_source_png *png;
-
-    } source;
-
-    /**
-     * [out] URL to the image.
-     */
-    char* url;
-
+        nekos_source_gif *gif; ///< [out] Source information for a gif (only use if the format is \link NEKOS_GIF nekos_format::NEKOS_GIF \endlink).
+        nekos_source_png *png; ///< [out] Source information for a png (only use if the format is \link NEKOS_PNG nekos_format::NEKOS_PNG \endlink).
+    } source; ///< [out] Source information of the image.
+    char* url; ///< [out] URL to the image.
 } nekos_result;
 
-/**
- * Struct for a list of result images. 
- */
+/// Struct for a list of result images.
 typedef struct {
-
-    /**
-     * [out] Array of result images.
-     */
-    nekos_result **responses;
-
-    /**
-     * [out] Amount of result images.
-     */
-    size_t len;
-
+    nekos_result **responses; ///< [out] Array of result images.
+    size_t len; ///< [out] Amount of result images.
 } nekos_result_list;
 
 /**
  * Struct for an http response.
  */
 typedef struct {
-
-    /**
-     * [out] Text of the response. Not null-terminated. 
-     */
-    char *text;
-
-    /**
-     * [out] Length of the response text. 
-     */
-    size_t len;
-
+    char *text; ///< [out] Non-nullterminated text of the response.
+    size_t len; ///< [out] Length of the response text.
 } nekos_http_response;
 
 #ifndef NEKOSBEST_IMPL
