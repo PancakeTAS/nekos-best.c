@@ -1,4 +1,4 @@
-/// \file This file contains structs and functions for interacting with the nekos.best API.
+/// \file nekosbest.h This file contains structs and functions for interacting with the nekos.best API.
 
 #ifndef NEKOSBEST_H
 #define NEKOSBEST_H
