@@ -17,7 +17,7 @@ int main() {
     // print results
     fprintf(stderr, WHITE BOLD "-> \\\n");
     for (size_t i = 0; i < results.len; i++) {
-        fprintf(stderr, PINK BOLD "  %s " WHITE BOLD "(" PINK BOLD "%s" WHITE BOLD ") made by " CYAN BOLD "%s" WHITE BOLD " (" PINK BOLD "%s" WHITE BOLD ")\n", results.responses[i]->url, results.responses[i]->source.png->source_url, results.responses[i]->source.png->artist_name, results.responses[i]->source.png->artist_href);
+        fprintf(stderr, PINK BOLD "  %s " WHITE BOLD "(" PINK BOLD "%s" WHITE BOLD ") made by " CYAN BOLD "%s" WHITE BOLD " (" PINK BOLD "%s" WHITE BOLD ")\n", results.responses[i].url, results.responses[i].source.png->source_url, results.responses[i].source.png->artist_name, results.responses[i].source.png->artist_href);
     }
 
     // free results

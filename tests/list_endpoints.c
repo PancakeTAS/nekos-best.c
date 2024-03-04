@@ -17,7 +17,7 @@ int main() {
     // print endpoints
     fprintf(stderr, WHITE BOLD "->" PINK);
     for (size_t i = 0; i < endpoints.len; i++)
-        fprintf(stderr, " %s", endpoints.endpoints[i]->name);
+        fprintf(stderr, " %s", endpoints.endpoints[i].name);
     fprintf(stderr, "\n" WHITE);
 
     // free endpoints
