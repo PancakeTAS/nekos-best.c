@@ -52,6 +52,6 @@ int main() {
     return EXIT_SUCCESS;
 }
 ```
-This example fetches an image from the 'neko' endpoint saves it to a file.
+This example fetches an image from the 'neko' endpoint saves it to a file. Please note that this example does not handle errors.
 
 For more examples, see `tests/`.
