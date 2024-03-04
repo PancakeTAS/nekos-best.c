@@ -90,15 +90,15 @@ typedef struct {
 
 /**
  * Get a list of endpoints/categories.
- * 
+ *
  * This function fetches the `endpoints` endpoint of the api
  * and parses the response into a list of endpoints.
- * 
+ *
  * It will allocate memory for the list of endpoints and the endpoints themselves.
- * 
+ *
  * \param [out] endpoints
  *   Pointer to a \link nekos_endpoint_list nekos_endpoint_list \endlink to store the endpoints in.
- * 
+ *
  * \return
  *   ::NEKOS_OK \n
  *   ::NEKOS_MEM_ERR \n
@@ -109,19 +109,19 @@ nekos_status nekos_endpoints(nekos_endpoint_list* endpoints);
 
 /**
  * Get a list of images from a category.
- * 
+ *
  * This function fetches the specified category endpoint of the api
  * and parses the response into a list of images.
- * 
+ *
  * It will allocate memory for the list of results, the results themselves, and the source information.
- * 
+ *
  * \param [out] results
  *   Pointer to a \link nekos_result_list nekos_result_list \endlink to store the results in.
  * \param [in] endpoint
  *   Pointer to a \link nekos_endpoint nekos_endpoint \endlink to specify the category.
  * \param [in] amount
  *   Amount of images to fetch. Must be between 1 and \link NEKOS_MAX_AMOUNT \endlink.
- * 
+ *
  * \return
  *   ::NEKOS_OK \n
  *   ::NEKOS_MEM_ERR \n
@@ -133,14 +133,14 @@ nekos_status nekos_category(nekos_result_list *results, const nekos_endpoint *en
 
 /**
  * Search for images.
- * 
+ *
  * This function fetches the `search` endpoint of the api
  * and parses the response into a list of images.
- * 
+ *
  * The search can optionally specify a endpoint/category.
- * 
+ *
  * It will allocate memory for the list of results, the results themselves, and the source information.
- * 
+ *
  * \param [out] results
  *   Pointer to a \link nekos_result_list nekos_result_list \endlink to store the results in.
  * \param [in] query
@@ -151,7 +151,7 @@ nekos_status nekos_category(nekos_result_list *results, const nekos_endpoint *en
  *   Format of the images to search for.
  * \param [in] endpoint
  *   Pointer to a \link nekos_endpoint nekos_endpoint \endlink to specify a category. Can be NULL.
- * 
+ *
  * \return
  *   ::NEKOS_OK \n
  *   ::NEKOS_MEM_ERR \n
@@ -163,17 +163,17 @@ nekos_status nekos_search(nekos_result_list *results, const char* query, int amo
 
 /**
  * Download an image.
- * 
+ *
  * This function fetches the specified image url
  * and stores the response in a \link nekos_http_response nekos_http_response \endlink.
- * 
+ *
  * It will allocate memory for the response text.
- * 
+ *
  * \param [out] http_response
  *   Pointer to a \link nekos_http_response nekos_http_response \endlink to store the response in.
  * \param [in] url
  *   URL of the image to download.
- * 
+ *
  * \return
  *   ::NEKOS_OK \n
  *   ::NEKOS_MEM_ERR \n
@@ -193,9 +193,9 @@ void nekos_free_endpoint(const nekos_endpoint* endpoint);
 
 /**
  * Free a list of endpoints.
- * 
+ *
  * This function frees the memory allocated for the list of endpoints and the endpoints themselves.
- * 
+ *
  * \param [in] endpoints
  *   Pointer to a \link nekos_endpoint_list nekos_endpoint_list \endlink to free.
  */
@@ -203,9 +203,9 @@ void nekos_free_endpoints(const nekos_endpoint_list* endpoints);
 
 /**
  * Free a result.
- * 
+ *
  * This function frees the memory allocated for the result and the source information.
- * 
+ *
  * \param [in] result
  *   Pointer to a \link nekos_result nekos_result \endlink to free.
  * \param [in] format
@@ -215,9 +215,9 @@ void nekos_free_result(const nekos_result* result, const nekos_format format);
 
 /**
  * Free a list of results.
- * 
+ *
  * This function frees the memory allocated for the list of results, the results themselves, and the source information.
- * 
+ *
  * \param [in] results
  *   Pointer to a \link nekos_result_list nekos_result_list \endlink to free.
  * \param [in] format
@@ -227,9 +227,9 @@ void nekos_free_results(const nekos_result_list* results, const nekos_format for
 
 /**
  * Free an http response.
- * 
+ *
  * This function frees the memory allocated for the response text.
- * 
+ *
  * \param [in] http_response
  *   Pointer to a \link nekos_http_response nekos_http_response \endlink to free.
  */
@@ -319,7 +319,7 @@ nekos_status nekos_endpoints(nekos_endpoint_list* endpoints) {
 
         i++;
     }
-    
+
     // cleanup
     cJSON_Delete(json);
     free(http_response.text);
@@ -442,7 +442,7 @@ void nekos_free_endpoint(const nekos_endpoint* endpoint) {
 void nekos_free_endpoints(const nekos_endpoint_list* endpoints) {
     for (size_t i = 0; i < endpoints->len; i++)
         nekos_free_endpoint(&endpoints->endpoints[i]);
-    
+
     free(endpoints->endpoints);
 }
 

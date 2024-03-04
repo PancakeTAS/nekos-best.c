@@ -26,6 +26,6 @@ int main() {
 
     // free response
     nekos_free_http_response(&http_response);
-    
+
     return EXIT_SUCCESS;
 }

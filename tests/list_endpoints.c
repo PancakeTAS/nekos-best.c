@@ -22,6 +22,6 @@ int main() {
 
     // free endpoints
     nekos_free_endpoints(&endpoints);
-    
+
     return EXIT_SUCCESS;
 }
