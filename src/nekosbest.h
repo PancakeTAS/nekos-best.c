@@ -143,7 +143,7 @@ nekos_status nekos_category(nekos_result_list *results, const nekos_endpoint *en
  *
  * \param [out] results
  *   Pointer to a \link nekos_result_list nekos_result_list \endlink to store the results in.
- * \param [in] query
+ * \param [in] raw_query
  *   Query to search for. Must be between \link NEKOS_MIN_QUERY_LEN \endlink and \link NEKOS_MAX_QUERY_LEN \endlink.
  * \param [in] amount
  *   Amount of images to fetch. Must be between 1 and \link NEKOS_MAX_AMOUNT \endlink.
@@ -159,7 +159,7 @@ nekos_status nekos_category(nekos_result_list *results, const nekos_endpoint *en
  *   ::NEKOS_CJSON_ERR \n
  *   ::NEKOS_INVALID_PARAM_ERR
  */
-nekos_status nekos_search(nekos_result_list *results, const char* query, int amount, const nekos_format format, const nekos_endpoint *endpoint);
+nekos_status nekos_search(nekos_result_list *results, const char* raw_query, int amount, const nekos_format format, const nekos_endpoint *endpoint);
 
 /**
  * Download an image.
@@ -374,10 +374,13 @@ nekos_status nekos_category(nekos_result_list *results, const nekos_endpoint *en
     return NEKOS_OK;
 }
 
-nekos_status nekos_search(nekos_result_list *results, const char* query, int amount, const nekos_format format, const nekos_endpoint *endpoint) {
+nekos_status nekos_search(nekos_result_list *results, const char* raw_query, int amount, const nekos_format format, const nekos_endpoint *endpoint) {
     // check if amount is valid
     if (amount < 1 || amount > NEKOS_MAX_AMOUNT)
         return NEKOS_INVALID_PARAM_ERR;
+
+    // url encode query
+    char* query = curl_easy_escape(NULL, raw_query, 0);
 
     // check if query is valid
     size_t query_len = strlen(query);
@@ -428,6 +431,7 @@ nekos_status nekos_search(nekos_result_list *results, const char* query, int amo
     // cleanup
     cJSON_Delete(json);
     free(http_response.text);
+    curl_free(query);
     return NEKOS_OK;
 }
 
