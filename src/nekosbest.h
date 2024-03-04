@@ -129,7 +129,7 @@ nekos_status nekos_endpoints(nekos_endpoint_list* endpoints);
  *   ::NEKOS_CJSON_ERR \n
  *   ::NEKOS_INVALID_PARAM_ERR
  */
-nekos_status nekos_category(nekos_result_list *results, nekos_endpoint *endpoint, int amount);
+nekos_status nekos_category(nekos_result_list *results, const nekos_endpoint *endpoint, int amount);
 
 /**
  * Search for images.
@@ -159,7 +159,7 @@ nekos_status nekos_category(nekos_result_list *results, nekos_endpoint *endpoint
  *   ::NEKOS_CJSON_ERR \n
  *   ::NEKOS_INVALID_PARAM_ERR
  */
-nekos_status nekos_search(nekos_result_list *results, const char* query, int amount, nekos_format format, nekos_endpoint *endpoint);
+nekos_status nekos_search(nekos_result_list *results, const char* query, int amount, const nekos_format format, const nekos_endpoint *endpoint);
 
 /**
  * Download an image.
@@ -183,13 +183,13 @@ nekos_status nekos_download(nekos_http_response *http_response, const char* url)
 
 /**
  * Free an endpoint.
- * 
+ *
  * This function frees the memory allocated for the endpoint.
- * 
+ *
  * \param [in] endpoint
  *   Pointer to a \link nekos_endpoint nekos_endpoint \endlink to free.
 */
-void nekos_free_endpoint(nekos_endpoint* endpoint);
+void nekos_free_endpoint(const nekos_endpoint* endpoint);
 
 /**
  * Free a list of endpoints.
@@ -199,7 +199,7 @@ void nekos_free_endpoint(nekos_endpoint* endpoint);
  * \param [in] endpoints
  *   Pointer to a \link nekos_endpoint_list nekos_endpoint_list \endlink to free.
  */
-void nekos_free_endpoints(nekos_endpoint_list* endpoints);
+void nekos_free_endpoints(const nekos_endpoint_list* endpoints);
 
 /**
  * Free a result.
@@ -211,7 +211,7 @@ void nekos_free_endpoints(nekos_endpoint_list* endpoints);
  * \param [in] format
  *   Format of the result.
  */
-void nekos_free_result(nekos_result* result, nekos_format format);
+void nekos_free_result(const nekos_result* result, const nekos_format format);
 
 /**
  * Free a list of results.
@@ -223,11 +223,21 @@ void nekos_free_result(nekos_result* result, nekos_format format);
  * \param [in] format
  *   Format of the results.
  */
-void nekos_free_results(nekos_result_list* results, nekos_format format);
+void nekos_free_results(const nekos_result_list* results, const nekos_format format);
+
+/**
+ * Free an http response.
+ * 
+ * This function frees the memory allocated for the response text.
+ * 
+ * \param [in] http_response
+ *   Pointer to a \link nekos_http_response nekos_http_response \endlink to free.
+ */
+void nekos_free_http_response(const nekos_http_response* http_response);
 
 #else // NEKOSBEST_IMPL
 
-static size_t nekos_write_callback(void *ptr, size_t count, size_t nmemb, nekos_http_response *http_response) {
+static size_t nekos_write_callback(const void *ptr, size_t count, size_t nmemb, nekos_http_response *http_response) {
     size_t size = count * nmemb;
     size_t new_len = http_response->len + size;
 
@@ -317,7 +327,7 @@ nekos_status nekos_endpoints(nekos_endpoint_list* endpoints) {
     return NEKOS_OK;
 }
 
-nekos_status nekos_category(nekos_result_list *results, nekos_endpoint *endpoint, int amount) {
+nekos_status nekos_category(nekos_result_list *results, const nekos_endpoint *endpoint, int amount) {
     // check if amount is valid
     if (amount < 1 || amount > NEKOS_MAX_AMOUNT)
         return NEKOS_INVALID_PARAM_ERR;
@@ -367,7 +377,7 @@ nekos_status nekos_category(nekos_result_list *results, nekos_endpoint *endpoint
     return NEKOS_OK;
 }
 
-nekos_status nekos_search(nekos_result_list *results, const char* query, int amount, nekos_format format, nekos_endpoint *endpoint) {
+nekos_status nekos_search(nekos_result_list *results, const char* query, int amount, const nekos_format format, const nekos_endpoint *endpoint) {
     // check if amount is valid
     if (amount < 1 || amount > NEKOS_MAX_AMOUNT)
         return NEKOS_INVALID_PARAM_ERR;
@@ -429,18 +439,20 @@ nekos_status nekos_download(nekos_http_response *http_response, const char* url)
     return nekos_do_request(http_response, url);
 }
 
-void nekos_free_endpoint(nekos_endpoint* endpoint) {
+void nekos_free_endpoint(const nekos_endpoint* endpoint) {
     free(endpoint->name);
-    free(endpoint);
 }
 
-void nekos_free_endpoints(nekos_endpoint_list* endpoints) {
-    for (size_t i = 0; i < endpoints->len; i++)
+void nekos_free_endpoints(const nekos_endpoint_list* endpoints) {
+    for (size_t i = 0; i < endpoints->len; i++) {
         nekos_free_endpoint(endpoints->endpoints[i]);
+        free(endpoints->endpoints[i]);
+    }
+    
     free(endpoints->endpoints);
 }
 
-void nekos_free_result(nekos_result* result, nekos_format format) {
+void nekos_free_result(const nekos_result* result, const nekos_format format) {
     free(result->url);
     if (format == NEKOS_GIF) {
         free(result->source.gif->anime_name);
@@ -451,16 +463,18 @@ void nekos_free_result(nekos_result* result, nekos_format format) {
         free(result->source.png->source_url);
         free(result->source.png);
     }
-    free(result);
 }
 
-void nekos_free_results(nekos_result_list* results, nekos_format format) {
-    for (size_t i = 0; i < results->len; i++)
+void nekos_free_results(const nekos_result_list* results, const nekos_format format) {
+    for (size_t i = 0; i < results->len; i++) {
         nekos_free_result(results->responses[i], format);
+        free(results->responses[i]);
+    }
+
     free(results->responses);
 }
 
-void nekos_free_http_response(nekos_http_response* http_response) {
+void nekos_free_http_response(const nekos_http_response* http_response) {
     free(http_response->text);
 }
 
