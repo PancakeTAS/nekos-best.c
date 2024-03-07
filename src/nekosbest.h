@@ -109,6 +109,21 @@ typedef struct {
 nekos_status nekos_endpoints(nekos_endpoint_list* endpoints);
 
 /**
+ * Find a specific endpoint in a list of endpoints/categories.
+ *
+ * This function searches for a specific endpoint in a list of endpoints by name.
+ *
+ * \param [in] endpoints
+ *   Pointer to a \link nekos_endpoint_list nekos_endpoint_list \endlink to search in.
+ * \param [in] name
+ *   Name of the endpoint to search for.
+ *
+ * \return
+ *   Pointer to the endpoint if found, NULL otherwise.
+ */
+nekos_endpoint* nekos_find_endpoint(const nekos_endpoint_list* endpoints, const char* name);
+
+/**
  * Get a list of images from a category.
  *
  * This function fetches the specified category endpoint of the api
@@ -321,6 +336,15 @@ nekos_status nekos_endpoints(nekos_endpoint_list* endpoints) {
     cJSON_Delete(json);
     free(http_response.text);
     return NEKOS_OK;
+}
+
+nekos_endpoint* nekos_find_endpoint(const nekos_endpoint_list* endpoints, const char* name) {
+    for (size_t i = 0; i < endpoints->len; i++) {
+        if (strcmp(endpoints->endpoints[i].name, name) == 0)
+            return &endpoints->endpoints[i];
+    }
+
+    return NULL;
 }
 
 nekos_status nekos_category(nekos_result_list *results, const nekos_endpoint *endpoint, int amount) {
