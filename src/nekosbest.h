@@ -65,6 +65,7 @@ typedef struct {
 
 /// Struct for a result image.
 typedef struct {
+    nekos_format format; ///< [out] Format of the image.
     union {
         nekos_source_gif *gif; ///< [out] Source information for a gif (only use if the format is \link NEKOS_GIF nekos_format::NEKOS_GIF \endlink).
         nekos_source_png *png; ///< [out] Source information for a png (only use if the format is \link NEKOS_PNG nekos_format::NEKOS_PNG \endlink).
@@ -208,10 +209,8 @@ void nekos_free_endpoints(const nekos_endpoint_list* endpoints);
  *
  * \param [in] result
  *   Pointer to a \link nekos_result nekos_result \endlink to free.
- * \param [in] format
- *   Format of the result.
  */
-void nekos_free_result(const nekos_result* result, const nekos_format format);
+void nekos_free_result(const nekos_result* result);
 
 /**
  * Free a list of results.
@@ -220,10 +219,8 @@ void nekos_free_result(const nekos_result* result, const nekos_format format);
  *
  * \param [in] results
  *   Pointer to a \link nekos_result_list nekos_result_list \endlink to free.
- * \param [in] format
- *   Format of the results.
  */
-void nekos_free_results(const nekos_result_list* results, const nekos_format format);
+void nekos_free_results(const nekos_result_list* results);
 
 /**
  * Free an http response.
@@ -356,6 +353,7 @@ nekos_status nekos_category(nekos_result_list *results, const nekos_endpoint *en
     size_t i = 0;
     cJSON_ArrayForEach(response_obj, results_obj) {
         results->responses[i].url = nekos_jsondup(response_obj, "url");
+        results->responses[i].format = endpoint->format;
         if (endpoint->format == NEKOS_GIF) {
             results->responses[i].source.gif = (nekos_source_gif*) malloc(sizeof(nekos_source_gif));
             results->responses[i].source.gif->anime_name = nekos_jsondup(response_obj, "anime_name");
@@ -415,6 +413,7 @@ nekos_status nekos_search(nekos_result_list *results, const char* raw_query, int
     size_t i = 0;
     cJSON_ArrayForEach(response_obj, results_obj) {
         results->responses[i].url = nekos_jsondup(response_obj, "url");
+        results->responses[i].format = format;
         if (format == NEKOS_GIF) {
             results->responses[i].source.gif = (nekos_source_gif*) malloc(sizeof(nekos_source_gif));
             results->responses[i].source.gif->anime_name = nekos_jsondup(response_obj, "anime_name");
@@ -450,9 +449,9 @@ void nekos_free_endpoints(const nekos_endpoint_list* endpoints) {
     free(endpoints->endpoints);
 }
 
-void nekos_free_result(const nekos_result* result, const nekos_format format) {
+void nekos_free_result(const nekos_result* result) {
     free(result->url);
-    if (format == NEKOS_GIF) {
+    if (result->format == NEKOS_GIF) {
         free(result->source.gif->anime_name);
         free(result->source.gif);
     } else {
@@ -463,9 +462,9 @@ void nekos_free_result(const nekos_result* result, const nekos_format format) {
     }
 }
 
-void nekos_free_results(const nekos_result_list* results, const nekos_format format) {
+void nekos_free_results(const nekos_result_list* results) {
     for (size_t i = 0; i < results->len; i++)
-        nekos_free_result(&results->responses[i], format);
+        nekos_free_result(&results->responses[i]);
 
     free(results->responses);
 }

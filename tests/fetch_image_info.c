@@ -26,7 +26,7 @@ int main() {
     }
 
     // free results
-    nekos_free_results(&results, NEKOS_PNG);
+    nekos_free_results(&results);
 
     return EXIT_SUCCESS;
 }
